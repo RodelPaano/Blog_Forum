@@ -1,0 +1,47 @@
+name: blog_forum_app
+description: "A modern, secure blog/forum app built with Flutter, Provider, go_router, and Supabase."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # State management
+  provider: ^6.1.2
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Supabase (Auth + DB + Storage)
+  supabase_flutter: ^2.8.0
+
+  # Image picker (multiple images)
+  image_picker: ^1.1.2
+
+  # Environment variables (.env)
+  flutter_dotenv: ^5.2.1
+
+  # Helpers
+  intl: ^0.20.1                # Date formatting
+  cached_network_image: ^3.4.1 # Image caching + error widget
+  uuid: ^4.5.1                 # Unique IDs for storage paths
+  mime: ^2.0.0                 # MIME type detection
+  path: ^1.9.0                 # File path utilities
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - .env
