@@ -13,9 +13,17 @@ import '../ui/pages/register_screen.dart';
 class AppRouter {
   AppRouter._();
 
+  static bool _isInitialLoad = true;
+
   static final GoRouter router = GoRouter(
     initialLocation: '/',
-    redirect: (context, state) => AuthGuard.redirect(context, state),
+    redirect: (context, state) {
+      if (_isInitialLoad) {
+        _isInitialLoad = false;
+        if (state.matchedLocation != '/') return '/';
+      }
+      return AuthGuard.redirect(context, state);
+    },
     routes: [
       GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),

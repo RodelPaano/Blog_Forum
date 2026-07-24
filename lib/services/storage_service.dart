@@ -20,36 +20,41 @@ class StorageService {
 
   /// Uploads an image with full validation (size, MIME, magic bytes,
   /// extension allowlist). Returns the public URL.
-  /// ✅ Accepts XFile — works on Web and Mobile.
+  /// Accepts XFile — works on Web and Mobile.
   Future<String> uploadImage(XFile file, {required String folder}) async {
-    // ✅ Read bytes once — works on both web and mobile
+    // Read bytes once — works on both web and mobile
     final bytes = await file.readAsBytes();
 
-    // ✅ Validate using XFile (updated ImageUtils)
+    // Validate using XFile (updated ImageUtils)
     if (!await ImageUtils.isValidImage(file)) {
       throw const StorageException(
         'Invalid image. Only JPEG, PNG, WEBP, GIF allowed.',
       );
     }
 
-    // ✅ Size check using bytes (no dart:io needed)
+    // Size check using bytes (no dart:io needed)
     if (bytes.length > AppConfig.maxImageBytes) {
       throw const StorageException('Image exceeds 5 MB limit.');
     }
 
-    // ✅ Extension check using file.name (not file.path)
+    // Extension check using file.name (not file.path)
     if (!ImageUtils.isAllowedExtension(file.name)) {
       throw const StorageException('File extension not allowed.');
     }
 
-    // ✅ MIME — use headerBytes for accuracy on both platforms
-    final nameForMime = (file.name.contains('.') && !file.name.startsWith('blob:'))
+    // MIME — use headerBytes for accuracy on both platforms
+    final nameForMime =
+        (file.name.contains('.') && !file.name.startsWith('blob:'))
         ? file.name
         : '';
-    final mime = lookupMimeType(nameForMime, headerBytes: bytes) ?? 'image/jpeg';
-    
+    final mime =
+        lookupMimeType(nameForMime, headerBytes: bytes) ?? 'image/jpeg';
+
     var ext = p.extension(file.name).toLowerCase();
-    if (ext.isEmpty || ext == '.tmp' || file.name.startsWith('blob:') || !AppConfig.allowedImageExtensions.contains(ext)) {
+    if (ext.isEmpty ||
+        ext == '.tmp' ||
+        file.name.startsWith('blob:') ||
+        !AppConfig.allowedImageExtensions.contains(ext)) {
       switch (mime) {
         case 'image/png':
           ext = '.png';
@@ -69,7 +74,7 @@ class StorageService {
 
     try {
       if (kIsWeb) {
-        // ✅ WEB — must use uploadBinary with bytes
+        // WEB — must use uploadBinary with bytes
         await SupabaseService.storage
             .from(AppConfig.storageBucket)
             .uploadBinary(
@@ -78,7 +83,7 @@ class StorageService {
               fileOptions: FileOptions(contentType: mime, upsert: false),
             );
       } else {
-        // ✅ MOBILE — can use upload with File
+        // MOBILE — can use upload with File
         final ioFile = io.File(file.path);
         await SupabaseService.storage
             .from(AppConfig.storageBucket)

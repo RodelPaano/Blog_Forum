@@ -84,6 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     final removed = await context.read<AuthProvider>().removeAvatar();
     if (!mounted) return;
     if (removed) {
@@ -119,7 +120,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await auth.signOut();
-              if (context.mounted) context.go('/');
+              if (!mounted) return;
+              context.go('/');
             },
           ),
         ],

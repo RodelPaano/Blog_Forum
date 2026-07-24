@@ -10,13 +10,18 @@ class AuthGuard {
   static String? redirect(BuildContext context, GoRouterState state) {
     final auth = context.read<AuthProvider>();
     final loggedIn = auth.isLoggedIn;
-    final goingToAuth =
-        state.matchedLocation == '/login' ||
-        state.matchedLocation == '/register';
+    final location = state.matchedLocation;
 
     if (auth.status == AuthStatus.unknown) return null;
-    if (!loggedIn && !goingToAuth) return '/login';
-    if (loggedIn && goingToAuth) return '/';
+
+    final isAuthRoute = location == '/login' || location == '/register';
+    final isProtectedRoute = location == '/post/new' ||
+        location.endsWith('/edit') ||
+        location == '/profile';
+
+    if (!loggedIn && isProtectedRoute) return '/login';
+    if (loggedIn && isAuthRoute) return '/';
+
     return null;
   }
 }

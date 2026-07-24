@@ -132,7 +132,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
               decoration: BoxDecoration(
                 color: cs.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cs.outlineVariant.withOpacity(0.3)),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +144,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
                       labelText: 'Title',
                       prefixIcon: Icon(Icons.title_rounded, color: cs.primary),
                       filled: true,
-                      fillColor: cs.surfaceContainerHighest.withOpacity(0.3),
+                      fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -166,7 +166,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
                         child: Icon(Icons.notes_rounded, color: cs.primary),
                       ),
                       filled: true,
-                      fillColor: cs.surfaceContainerHighest.withOpacity(0.3),
+                      fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -183,7 +183,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
               decoration: BoxDecoration(
                 color: cs.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cs.outlineVariant.withOpacity(0.3)),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -13,6 +13,12 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Card(
+      elevation: 0,
+      color: cs.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4), width: 1),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/post/${post.id}'),
@@ -31,9 +37,8 @@ class PostCard extends StatelessWidget {
                         : null,
                     child: post.authorAvatar == null
                         ? Text(
-                            (post.authorName ?? '?').characters.first
-                                .toUpperCase(),
-                            style: TextStyle(color: cs.onPrimaryContainer),
+                            (post.authorName ?? '?').characters.first.toUpperCase(),
+                            style: TextStyle(color: cs.onPrimaryContainer, fontSize: 14),
                           )
                         : null,
                   ),
@@ -44,36 +49,33 @@ class PostCard extends StatelessWidget {
                       children: [
                         Text(
                           post.authorName ?? 'Anonymous',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: cs.onSurface),
                         ),
                         Text(
                           AppDate.relative(post.createdAt),
-                          style: TextStyle(color: cs.outline, fontSize: 12),
+                          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 post.title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface, height: 1.3),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 post.content,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: cs.onSurfaceVariant),
+                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant, height: 1.4),
               ),
               if (post.images.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 SizedBox(
-                  height: 90,
+                  height: 56,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: post.images.length,
@@ -83,14 +85,14 @@ class PostCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         child: CachedNetworkImage(
                           imageUrl: post.images[i],
-                          width: 90,
-                          height: 90,
+                          width: 56,
+                          height: 56,
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
-                            width: 90,
-                            height: 90,
-                            color: cs.surfaceContainerHigh,
-                            child: const Icon(Icons.broken_image),
+                            width: 56,
+                            height: 56,
+                            color: cs.surfaceContainerHighest,
+                            child: Icon(Icons.broken_image, size: 20, color: cs.outline),
                           ),
                         ),
                       ),

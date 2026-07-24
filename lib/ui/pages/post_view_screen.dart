@@ -247,10 +247,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   decoration: BoxDecoration(
                     color: cs.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cs.outlineVariant.withOpacity(0.3)),
+                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color: cs.shadow.withOpacity(0.06),
+                        color: cs.shadow.withValues(alpha: 0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -316,24 +316,32 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         ),
                       ),
                       if (post.images.isNotEmpty) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         GridView.count(
-                          crossAxisCount: 2,
+                          crossAxisCount: 3,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 6,
+                          crossAxisSpacing: 6,
                           childAspectRatio: 1,
                           children: post.images
                               .map(
-                                (u) => ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: u,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) => Container(
-                                      color: cs.surfaceContainerHighest,
-                                      child: Icon(Icons.broken_image, color: cs.outline),
+                                (u) => Container(
+                                  decoration: BoxDecoration(
+                                    color: cs.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: CachedNetworkImage(
+                                      imageUrl: u,
+                                      fit: BoxFit.contain,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      errorWidget: (_, __, ___) => Container(
+                                        color: cs.surfaceContainerHighest,
+                                        child: Icon(Icons.broken_image, size: 18, color: cs.outline),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -345,49 +353,82 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Icon(Icons.comment_outlined, size: 20, color: cs.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Comments (${comments.length})',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
+                if (context.watch<AuthProvider>().isLoggedIn) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.comment_outlined, size: 20, color: cs.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Comments (${comments.length})',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (commentsLoading)
+                    const Center(child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(),
+                    ))
+                  else if (comments.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const EmptyState(
+                        icon: Icons.chat_bubble_outline,
+                        title: 'No comments yet',
+                        subtitle: 'Be the first to share your thoughts',
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (commentsLoading)
-                  const Center(child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(),
-                  ))
-                else if (comments.isEmpty)
+                  ...comments.map(
+                    (c) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: CommentCard(
+                        comment: c,
+                        onEdit: () => _startEditComment(c),
+                        onDelete: () => _deleteComment(c),
+                      ),
+                    ),
+                  ),
+                ] else
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     decoration: BoxDecoration(
-                      color: cs.surfaceContainerHighest.withOpacity(0.3),
+                      color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const EmptyState(
-                      icon: Icons.chat_bubble_outline,
-                      title: 'No comments yet',
-                      subtitle: 'Be the first to share your thoughts',
+                    child: Column(
+                      children: [
+                        Icon(Icons.lock_outline, size: 48, color: cs.outline),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Sign in to view and post comments',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: () => context.push('/login'),
+                          icon: const Icon(Icons.login_rounded, size: 18),
+                          label: const Text('Sign In'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => context.push('/register'),
+                          child: const Text("Don't have an account? Sign up"),
+                        ),
+                      ],
                     ),
                   ),
-                ...comments.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: CommentCard(
-                      comment: c,
-                      onEdit: () => _startEditComment(c),
-                      onDelete: () => _deleteComment(c),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 80),
               ],
             ),
@@ -406,7 +447,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
         decoration: BoxDecoration(
           color: cs.surface,
           border: Border(
-            top: BorderSide(color: cs.outlineVariant.withOpacity(0.5)),
+            top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
         ),
         child: Column(
@@ -417,7 +458,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: cs.primaryContainer.withOpacity(0.5),
+                  color: cs.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -448,7 +489,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
               decoration: InputDecoration(
                 hintText: 'Write a comment...',
                 filled: true,
-                fillColor: cs.surfaceContainerHighest.withOpacity(0.3),
+                fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.3),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
