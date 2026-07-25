@@ -43,7 +43,13 @@ class AuthService {
       final existing = await _profileRepo.getById(user.id);
       if (existing == null) {
         await _profileRepo.create(
-          UserProfile(id: user.id, email: cleanEmail, fullName: cleanName),
+          UserProfile(
+            id: user.id,
+            email: cleanEmail,
+            fullName: cleanName,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
         );
       }
 
@@ -72,9 +78,17 @@ class AuthService {
       }
 
       var profile = await _profileRepo.getById(user.id);
-      if (profile == null) {
+      if (profile == null &&
+          profile?.email != cleanEmail &&
+          profile?.fullName != 'User') {
         profile = await _profileRepo.create(
-          UserProfile(id: user.id, email: cleanEmail, fullName: 'User'),
+          UserProfile(
+            id: user.id,
+            email: cleanEmail,
+            fullName: 'User',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
         );
       }
 
@@ -102,6 +116,8 @@ class AuthService {
       id: user.id,
       email: user.email ?? '',
       fullName: (user.userMetadata?['full_name'] as String?) ?? 'User',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
     return await _profileRepo.create(fallback);
   }

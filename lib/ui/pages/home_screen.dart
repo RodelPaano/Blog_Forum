@@ -60,38 +60,50 @@ class _HomeScreenState extends State<HomeScreen> {
           key: _drawerKey,
           appBar: AppBar(
             title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: cs.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.article_rounded,
-                    color: cs.onPrimary,
-                    size: 20,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.article_rounded,
+                        color: cs.onPrimary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Blog Forum',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: _isMobile ? 18 : 20,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Blog Forum',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: _isMobile ? 18 : 20,
-                    letterSpacing: -0.3,
+                if (_isMobile) ...[
+                  IconButton(
+                    icon: const Icon(Icons.menu_rounded, size: 22),
+                    tooltip: 'Menu',
+                    onPressed: () => _drawerKey.currentState?.openDrawer(),
                   ),
-                ),
+                ],
               ],
             ),
             elevation: 0,
             surfaceTintColor: cs.surface,
             backgroundColor: cs.surface,
-            automaticallyImplyLeading: _isMobile,
+            automaticallyImplyLeading: false,
             actions: _isMobile
-                ? null
-                : [
+                 ? null
+                 : [
                     if (!loggedIn) ...[
                       TextButton.icon(
                         onPressed: () => context.push('/login'),

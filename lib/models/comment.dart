@@ -1,27 +1,24 @@
 import 'base_model.dart';
 
 class Comment extends BaseModel {
-  final String id;
   final String postId;
   final String userId;
   final String content;
   final List<String> images;
   final String? authorName;
   final String? authorAvatar;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   const Comment({
-    required this.id,
+    required super.id,
     required this.postId,
     required this.userId,
     required this.content,
     required this.images,
     this.authorName,
     this.authorAvatar,
-    required this.createdAt,
-    required this.updatedAt,
-  }) : super();
+    required super.createdAt,
+    required super.updatedAt,
+  });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String?;

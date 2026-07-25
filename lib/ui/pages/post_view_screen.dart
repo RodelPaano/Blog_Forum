@@ -285,7 +285,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                   ),
                                 ),
                                 Text(
-                                  AppDate.relative(post.createdAt),
+                                  AppDate.display(post.createdAt, post.updatedAt),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: cs.onSurfaceVariant,

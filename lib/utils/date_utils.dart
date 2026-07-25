@@ -11,4 +11,14 @@ class AppDate {
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return DateFormat('MMM d, y').format(dt);
   }
+
+  static String display(DateTime created, DateTime updated) {
+    final base = relative(created);
+    final isEdited =
+        (updated.millisecondsSinceEpoch - created.millisecondsSinceEpoch)
+                .abs() >=
+            1000;
+    if (isEdited) return '$base · edited';
+    return base;
+  }
 }

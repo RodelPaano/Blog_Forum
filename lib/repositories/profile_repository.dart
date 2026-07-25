@@ -73,10 +73,11 @@ class ProfileRepository extends GenericRepository<UserProfile> {
       id: userId,
       email: email,
       fullName: fullName.isNotEmpty ? fullName : 'User',
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
     );
     return await upsert(fallback);
   }
-
 
   Future<UserProfile> updateProfile({
     required String userId,
