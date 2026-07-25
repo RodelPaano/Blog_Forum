@@ -1,0 +1,10 @@
+.idea/
+android/
+ios/
+linux/
+windows/
+build/
+.dart_tool/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
