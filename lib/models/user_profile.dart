@@ -2,42 +2,58 @@
 import 'base_model.dart';
 
 class UserProfile extends BaseModel {
-  final String id;
   final String email;
   final String fullName;
   final String? avatarUrl;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
   const UserProfile({
-    required this.id,
+    required super.id,
     required this.email,
     required this.fullName,
     this.avatarUrl,
-    this.createdAt,
-    this.updatedAt,
-  }) : super();
+    required super.createdAt,
+    required super.updatedAt,
+  });
 
   /// Safe JSON parser. Throws [FormatException] on missing required fields.
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String?;
-    if (id == null) {
+    if (id == null || id.isEmpty) {
       throw const FormatException('UserProfile: id is required');
     }
+
+    final createdRaw = json['created_at'];
+    final updatedRaw = json['updated_at'];
+
+    if (createdRaw == null) {
+      throw const FormatException('UserProfile: created_at is required');
+    }
+    if (updatedRaw == null) {
+      throw const FormatException('UserProfile: updated_at is required');
+    }
+
+    DateTime parseDate(dynamic v, String fieldName) {
+      if (v is DateTime) return v;
+      if (v is String && v.isNotEmpty) {
+        try {
+          return DateTime.parse(v);
+        } catch (e) {
+          throw FormatException('UserProfile: invalid $fieldName format');
+        }
+      }
+      throw FormatException(
+        'UserProfile: $fieldName is required and must be a valid ISO8601 string',
+      );
+    }
+
     return UserProfile(
       id: id,
       email: (json['email'] as String?) ?? '',
       fullName: (json['full_name'] as String?) ?? 'User',
       avatarUrl: json['avatar_url'] as String?,
-      createdAt: _parseDate(json['created_at']),
-      updatedAt: _parseDate(json['updated_at']),
+      createdAt: parseDate(createdRaw, 'created_at'),
+      updatedAt: parseDate(updatedRaw, 'updated_at'),
     );
-  }
-
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is String) return DateTime.tryParse(v);
-    return null;
   }
 
   UserProfile copyWith({
@@ -64,7 +80,7 @@ class UserProfile extends BaseModel {
     'email': email,
     'full_name': fullName,
     'avatar_url': avatarUrl,
-    'created_at': createdAt?.toIso8601String(),
-    'updated_at': updatedAt?.toIso8601String(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
   };
 }

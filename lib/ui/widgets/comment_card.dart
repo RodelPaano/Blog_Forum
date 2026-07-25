@@ -52,10 +52,10 @@ class CommentCard extends StatelessWidget {
                         comment.authorName ?? 'Anonymous',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      Text(
-                        AppDate.relative(comment.createdAt),
-                        style: TextStyle(color: cs.outline, fontSize: 12),
-                      ),
+Text(
+                          AppDate.display(comment.createdAt, comment.updatedAt),
+                          style: TextStyle(color: cs.outline, fontSize: 12),
+                        ),
                     ],
                   ),
                 ),
