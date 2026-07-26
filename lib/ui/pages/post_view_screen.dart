@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,9 +14,12 @@ import '../../providers/comment_provider.dart';
 import '../../providers/post_provider.dart';
 import '../../repositories/post_repository.dart';
 import '../../utils/date_utils.dart';
+import '../widgets/app_avatar.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/image_gallery.dart';
 import '../widgets/image_picker_widget.dart';
+import '../widgets/loading_button.dart';
 
 class PostViewScreen extends StatefulWidget {
   const PostViewScreen({super.key, required this.postId});
@@ -71,7 +73,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
       final ok = await context.read<CommentProvider>().update(
         original: _editingComment!,
         content: _comment.text.trim(),
-        existing: _existingImages,
+        existingImages: _existingImages,
         newFiles: _newFiles,
         toDelete: _toDelete,
       );
@@ -129,7 +131,12 @@ class _PostViewScreenState extends State<PostViewScreen> {
       ),
     );
     if (ok == true && mounted) {
-      await context.read<CommentProvider>().delete(c);
+      await context.read<CommentProvider>().delete(
+        comment: c,
+        imageUrls: c.images,
+      );
+      if (mounted) context.pop();
+      return;
     }
   }
 
@@ -155,8 +162,8 @@ class _PostViewScreenState extends State<PostViewScreen> {
     if (ok != true || !mounted) return;
     final p = _post!;
     final removed = await context.read<PostProvider>().deletePost(
-      p.id,
-      p.images,
+      postId: p.id,
+      imageUrls: p.images,
     );
     if (removed && mounted) context.pop();
   }
@@ -167,10 +174,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
         : AppConfig.maxImagesPerPost;
     final remain = max - (_existingImages.length + _newFiles.length);
     if (remain <= 0) return;
-    final picks = await _picker.pickMultiImage(
-      imageQuality: 70,
-      maxWidth: 800,
-    );
+    final picks = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 800);
     if (picks.isEmpty) return;
     setState(() {
       _newFiles.addAll(picks.take(remain).map((x) => File(x.path)));
@@ -247,7 +251,9 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   decoration: BoxDecoration(
                     color: cs.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.3),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: cs.shadow.withValues(alpha: 0.06),
@@ -261,15 +267,11 @@ class _PostViewScreenState extends State<PostViewScreen> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
+                          AppAvatar(
+                            name: post.authorName,
+                            imageUrl: post.authorAvatar,
                             radius: 20,
-                            backgroundColor: cs.primaryContainer,
-                            backgroundImage: post.authorAvatar != null
-                                ? CachedNetworkImageProvider(post.authorAvatar!)
-                                : null,
-                            child: post.authorAvatar == null
-                                ? Icon(Icons.person_rounded, size: 20, color: cs.onPrimaryContainer)
-                                : null,
+                            icon: Icons.person_rounded,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -285,7 +287,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                   ),
                                 ),
                                 Text(
-                                  AppDate.display(post.createdAt, post.updatedAt),
+                                  AppDate.display(
+                                    post.createdAt,
+                                    post.updatedAt,
+                                  ),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: cs.onSurfaceVariant,
@@ -317,37 +322,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                       ),
                       if (post.images.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        GridView.count(
-                          crossAxisCount: 3,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 6,
-                          crossAxisSpacing: 6,
-                          childAspectRatio: 1,
-                          children: post.images
-                              .map(
-                                (u) => Container(
-                                  decoration: BoxDecoration(
-                                    color: cs.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: CachedNetworkImage(
-                                      imageUrl: u,
-                                      fit: BoxFit.contain,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      errorWidget: (_, __, ___) => Container(
-                                        color: cs.surfaceContainerHighest,
-                                        child: Icon(Icons.broken_image, size: 18, color: cs.outline),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
+                        ImageGrid(urls: post.images),
                       ],
                     ],
                   ),
@@ -370,15 +345,19 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   ),
                   const SizedBox(height: 12),
                   if (commentsLoading)
-                    const Center(child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: CircularProgressIndicator(),
-                    ))
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
                   else if (comments.isEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 32),
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+                        color: cs.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const EmptyState(
@@ -455,7 +434,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
           children: [
             if (_editingComment != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer.withValues(alpha: 0.5),
@@ -473,7 +455,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                     TextButton(
                       onPressed: _resetForm,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         minimumSize: const Size(0, 0),
                       ),
                       child: const Text('Cancel'),
@@ -494,7 +479,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -513,28 +501,13 @@ class _PostViewScreenState extends State<PostViewScreen> {
               },
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _busy ? null : _submitComment,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: _busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.send_rounded),
-                label: Text(_editingComment != null ? 'Update Comment' : 'Post Comment'),
-              ),
+            LoadingFilledButton(
+              label: _editingComment != null
+                  ? 'Update Comment'
+                  : 'Post Comment',
+              isLoading: _busy,
+              onPressed: _submitComment,
+              icon: Icons.send_rounded,
             ),
           ],
         ),

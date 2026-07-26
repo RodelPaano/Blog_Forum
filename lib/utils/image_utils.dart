@@ -49,7 +49,8 @@ class ImageUtils {
     if (!isAllowedExtension(file.name)) return false;
 
     // ✅ MIME type check — pass name only if valid extension, else headerBytes lookup
-    final nameForMime = (file.name.contains('.') && !file.name.startsWith('blob:'))
+    final nameForMime =
+        (file.name.contains('.') && !file.name.startsWith('blob:'))
         ? file.name
         : '';
     final mime = lookupMimeType(nameForMime, headerBytes: bytes);

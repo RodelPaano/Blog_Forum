@@ -1,24 +1,24 @@
 import 'dart:io';
-
+import 'package:blog_forum_app/services/comment_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
-
-import '../core/config.dart';
 import '../core/exceptions.dart';
 import '../core/logger.dart';
-import '../core/sanitizers.dart';
-import '../core/supabase_client.dart';
+
 import '../models/comment.dart';
-import '../repositories/comment_repository.dart';
-import '../services/storage_service.dart';
 
 class CommentProvider extends ChangeNotifier {
-  final _repo = CommentRepository();
-  final _storage = StorageService();
+  final CommentService _service;
+
+  CommentProvider({CommentService? service})
+    : _service = service ?? CommentService();
+
+  // ─── State ─────────────────────────────────────────────────
 
   final Map<String, List<Comment>> _byPost = {};
   final Set<String> _loadingPosts = {};
   String? _error;
+
+  // ─── Getters ─────────────────────────────────────────────────
 
   bool isLoadingFor(String postId) => _loadingPosts.contains(postId);
   String? get error => _error;
@@ -26,48 +26,34 @@ class CommentProvider extends ChangeNotifier {
   List<Comment> commentsFor(String postId) =>
       List.unmodifiable(_byPost[postId] ?? const []);
 
+  // ─── Load ───────────────────────────────────────────────────
   Future<void> loadFor(String postId) async {
     if (_loadingPosts.contains(postId)) return;
     _loadingPosts.add(postId);
+    _error = null;
     notifyListeners();
     try {
-      _byPost[postId] = await _repo.getByPost(postId);
-      _error = null;
+      _byPost[postId] = await _service.getByPost(postId);
     } on AppException catch (e) {
       _error = e.message;
-      AppLogger.error('loadFor comments', e);
+      AppLogger.error('CommentProvider.loadFor', e);
     } finally {
       _loadingPosts.remove(postId);
       notifyListeners();
     }
   }
 
+  // ─── Add ───────────────────────────────────────────────
   Future<Comment?> add({
     required String postId,
     required String content,
     required List<File> imageFiles,
   }) async {
     try {
-      final cleanContent = Sanitizers.cleanText(
-        content,
-        maxLength: AppConfig.maxCommentLength,
-      );
-
-      final urls = <String>[];
-      for (final f in imageFiles) {
-        urls.add(await _storage.uploadImage(XFile(f.path), folder: 'comments'));
-      }
-
-      final comment = await _repo.create(
-        Comment(
-          id: '',
-          postId: postId,
-          userId: SupabaseService.currentUserId,
-          content: cleanContent,
-          images: urls,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final comment = await _service.add(
+        postId: postId,
+        content: content,
+        imageFiles: imageFiles,
       );
       _byPost.putIfAbsent(postId, () => []).add(comment);
       _error = null;
@@ -75,65 +61,53 @@ class CommentProvider extends ChangeNotifier {
       return comment;
     } on AppException catch (e) {
       _error = e.message;
-      notifyListeners();
+      AppLogger.error('CommentProvider.add', e);
       return null;
     }
   }
 
+  // ─── Update ───────────────────────────────────────────────
   Future<bool> update({
     required Comment original,
     required String content,
-    required List<String> existing,
+    required List<String> existingImages,
     required List<File> newFiles,
     required List<String> toDelete,
   }) async {
     try {
-      final cleanContent = Sanitizers.cleanText(
-        content,
-        maxLength: AppConfig.maxCommentLength,
-      );
-
-      if (toDelete.isNotEmpty) {
-        await _storage.deleteImages(toDelete);
-      }
-      final newUrls = <String>[];
-      for (final f in newFiles) {
-        newUrls.add(
-          await _storage.uploadImage(XFile(f.path), folder: 'comments'),
-        );
-      }
-      final allImages = [
-        ...existing,
-        ...newUrls,
-      ].where((u) => Sanitizers.safeImageUrl(u) != null).toList();
-
-      final updated = await _repo.update(
-        original.copyWith(content: cleanContent, images: allImages),
+      final updated = await _service.update(
+        original: original,
+        content: content,
+        existingImages: existingImages,
+        newFiles: newFiles,
+        toDelete: toDelete,
       );
       final list = _byPost[original.postId];
       if (list != null) {
         final idx = list.indexWhere((c) => c.id == updated.id);
         if (idx != -1) list[idx] = updated;
-        notifyListeners();
       }
+
       _error = null;
+      notifyListeners();
       return true;
     } on AppException catch (e) {
       _error = e.message;
-      notifyListeners();
+      AppLogger.error('CommentProvider.update', e);
       return false;
     }
   }
 
-  Future<bool> delete(Comment comment) async {
+  // ─── Delete ───────────────────────────────────────────────
+  Future<bool> delete({
+    required Comment comment,
+    required List<String> imageUrls,
+  }) async {
     try {
-      await _repo.delete(comment.id);
-      if (comment.images.isNotEmpty) {
-        await _storage.deleteImages(comment.images);
-      }
+      await _service.delete(comment);
       _byPost[comment.postId]?.removeWhere((c) => c.id == comment.id);
-      notifyListeners();
       _error = null;
+      notifyListeners();
       return true;
     } on AppException catch (e) {
       _error = e.message;
@@ -142,8 +116,14 @@ class CommentProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Clear Helper ───────────────────────────────────────────────
   void clearError() {
     _error = null;
+    notifyListeners();
+  }
+
+  void clearPost(String postId) {
+    _byPost.remove(postId);
     notifyListeners();
   }
 }

@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/loading_button.dart';
+import '../widgets/mobile_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -120,25 +122,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await auth.signOut();
-              if (!mounted) return;
+              if (!context.mounted) return;
               context.go('/');
             },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: MobilePage(
         child: Form(
           key: _form,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 12),
               if (profile != null)
                 Text(
                   profile.fullName,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               const SizedBox(height: 20),
               Center(
@@ -202,18 +204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 subtitle: const Text('Email cannot be changed'),
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: auth.isBusy ? null : _save,
-                child: auth.isBusy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Save Changes'),
+              LoadingFilledButton(
+                label: 'Save Changes',
+                isLoading: auth.isBusy,
+                onPressed: _save,
               ),
             ],
           ),

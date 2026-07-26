@@ -16,8 +16,8 @@ class AppDate {
     final base = relative(created);
     final isEdited =
         (updated.millisecondsSinceEpoch - created.millisecondsSinceEpoch)
-                .abs() >=
-            1000;
+            .abs() >=
+        1000;
     if (isEdited) return '$base · edited';
     return base;
   }

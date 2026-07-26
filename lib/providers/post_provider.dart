@@ -1,21 +1,20 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../core/config.dart';
 import '../core/exceptions.dart';
 import '../core/logger.dart';
-import '../core/sanitizers.dart';
-import '../core/supabase_client.dart';
 import '../models/post.dart';
-import '../repositories/post_repository.dart';
-import '../services/storage_service.dart';
+import '../services/post_service.dart';
 import '../utils/pagination.dart';
 
 class PostProvider extends ChangeNotifier {
-  final _repo = PostRepository();
-  final _storage = StorageService();
+  final PostService _service;
+
+  PostProvider({PostService? service}) : _service = service ?? PostService();
+
+  // ─── State ─────────────────────────────────────────────────
 
   final Paginator<Post> _paginator = Paginator<Post>(
     pageSize: AppConfig.pageSize,
@@ -23,10 +22,14 @@ class PostProvider extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
+  // ─── Getters ───────────────────────────────────────────────
+
   List<Post> get posts => _paginator.items;
   bool get isLoading => _loading;
   bool get hasMore => _paginator.hasMore;
   String? get error => _error;
+
+  // ─── Load ──────────────────────────────────────────────────
 
   Future<void> loadInitial() async {
     _loading = true;
@@ -34,11 +37,11 @@ class PostProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _paginator.reset(
-        load: (page, limit) => _repo.getAll(page: page, limit: limit),
+        load: (page, limit) => _service.getAll(page: page, limit: limit),
       );
     } on AppException catch (e) {
       _error = e.message;
-      AppLogger.error('loadInitial', e);
+      AppLogger.error('PostProvider.loadInitial', e);
     } finally {
       _loading = false;
       notifyListeners();
@@ -51,15 +54,18 @@ class PostProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _paginator.loadMore(
-        load: (page, limit) => _repo.getAll(page: page, limit: limit),
+        load: (page, limit) => _service.getAll(page: page, limit: limit),
       );
     } on AppException catch (e) {
       _error = e.message;
+      AppLogger.error('PostProvider.loadMore', e);
     } finally {
       _loading = false;
       notifyListeners();
     }
   }
+
+  // ─── Create ────────────────────────────────────────────────
 
   Future<Post?> createPost({
     required String title,
@@ -67,47 +73,27 @@ class PostProvider extends ChangeNotifier {
     required List<File> imageFiles,
   }) async {
     _loading = true;
+    _error = null;
     notifyListeners();
     try {
-      final cleanTitle = Sanitizers.cleanText(
-        title,
-        maxLength: AppConfig.maxTitleLength,
-      );
-      final cleanContent = Sanitizers.cleanText(
-        content,
-        maxLength: AppConfig.maxContentLength,
-      );
-
-      final uploadedUrls = <String>[];
-      for (final f in imageFiles) {
-        uploadedUrls.add(
-          await _storage.uploadImage(XFile(f.path), folder: 'posts'),
-        );
-      }
-
-      final post = await _repo.create(
-        Post(
-          id: '',
-          userId: SupabaseService.currentUserId,
-          title: cleanTitle,
-          content: cleanContent,
-          images: uploadedUrls,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final post = await _service.create(
+        title: title,
+        content: content,
+        imageFiles: imageFiles,
       );
       _paginator.prepend(post);
-      _error = null;
       return post;
     } on AppException catch (e) {
       _error = e.message;
-      AppLogger.error('createPost', e);
+      AppLogger.error('PostProvider.createPost', e);
       return null;
     } finally {
       _loading = false;
       notifyListeners();
     }
   }
+
+  // ─── Update ────────────────────────────────────────────────
 
   Future<Post?> updatePost({
     required String postId,
@@ -118,48 +104,22 @@ class PostProvider extends ChangeNotifier {
     required List<String> imagesToDelete,
   }) async {
     _loading = true;
+    _error = null;
     notifyListeners();
     try {
-      final cleanTitle = Sanitizers.cleanText(
-        title,
-        maxLength: AppConfig.maxTitleLength,
-      );
-      final cleanContent = Sanitizers.cleanText(
-        content,
-        maxLength: AppConfig.maxContentLength,
-      );
-
-      if (imagesToDelete.isNotEmpty) {
-        await _storage.deleteImages(imagesToDelete);
-      }
-      final newUrls = <String>[];
-      for (final f in newImageFiles) {
-        newUrls.add(await _storage.uploadImage(XFile(f.path), folder: 'posts'));
-      }
-      final allImages = [...existingImageUrls, ...newUrls];
-
-      // Sanitize: drop any URLs that fail our allowlist
-      final safeImages = allImages
-          .where((u) => Sanitizers.safeImageUrl(u) != null)
-          .toList();
-
-      final updated = await _repo.update(
-        Post(
-          id: postId,
-          userId: SupabaseService.currentUserId,
-          title: cleanTitle,
-          content: cleanContent,
-          images: safeImages,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final updated = await _service.update(
+        postId: postId,
+        title: title,
+        content: content,
+        existingImageUrls: existingImageUrls,
+        newImageFiles: newImageFiles,
+        imagesToDelete: imagesToDelete,
       );
       _paginator.replace(updated);
-      _error = null;
       return updated;
     } on AppException catch (e) {
       _error = e.message;
-      AppLogger.error('updatePost', e);
+      AppLogger.error('PostProvider.updatePost', e);
       return null;
     } finally {
       _loading = false;
@@ -167,23 +127,30 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> deletePost(String postId, List<String> imageUrls) async {
+  // ─── Delete ────────────────────────────────────────────────
+
+  Future<bool> deletePost({
+    required String postId,
+    required List<String> imageUrls,
+  }) async {
     _loading = true;
+    _error = null;
     notifyListeners();
     try {
-      await _repo.delete(postId);
-      await _storage.deleteImages(imageUrls);
+      await _service.delete(postId: postId, imageUrls: imageUrls);
       _paginator.removeWhere((p) => p.id == postId);
-      _error = null;
       return true;
     } on AppException catch (e) {
       _error = e.message;
+      AppLogger.error('PostProvider.deletePost', e);
       return false;
     } finally {
       _loading = false;
       notifyListeners();
     }
   }
+
+  // ─── Helpers ───────────────────────────────────────────────
 
   void clearError() {
     _error = null;

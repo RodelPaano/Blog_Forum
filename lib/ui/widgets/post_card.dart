@@ -1,9 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/post.dart';
 import '../../utils/date_utils.dart';
+import 'app_avatar.dart';
+import 'image_gallery.dart';
 
 class PostCard extends StatelessWidget {
   const PostCard({super.key, required this.post});
@@ -17,7 +18,10 @@ class PostCard extends StatelessWidget {
       color: cs.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4), width: 1),
+        side: BorderSide(
+          color: cs.outlineVariant.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -29,19 +33,7 @@ class PostCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: cs.primaryContainer,
-                    backgroundImage: post.authorAvatar != null
-                        ? CachedNetworkImageProvider(post.authorAvatar!)
-                        : null,
-                    child: post.authorAvatar == null
-                        ? Text(
-                            (post.authorName ?? '?').characters.first.toUpperCase(),
-                            style: TextStyle(color: cs.onPrimaryContainer, fontSize: 14),
-                          )
-                        : null,
-                  ),
+                  AppAvatar(name: post.authorName, imageUrl: post.authorAvatar),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -49,11 +41,18 @@ class PostCard extends StatelessWidget {
                       children: [
                         Text(
                           post.authorName ?? 'Anonymous',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: cs.onSurface),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: cs.onSurface,
+                          ),
                         ),
                         Text(
                           AppDate.relative(post.createdAt),
-                          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -63,42 +62,27 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 post.title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface, height: 1.3),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                  height: 1.3,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 post.content,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant, height: 1.4),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: cs.onSurfaceVariant,
+                  height: 1.4,
+                ),
               ),
               if (post.images.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                SizedBox(
-                  height: 56,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: post.images.length,
-                    itemBuilder: (_, i) => Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(
-                          imageUrl: post.images[i],
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => Container(
-                            width: 56,
-                            height: 56,
-                            color: cs.surfaceContainerHighest,
-                            child: Icon(Icons.broken_image, size: 20, color: cs.outline),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                ImageStrip(urls: post.images, size: 56),
               ],
             ],
           ),

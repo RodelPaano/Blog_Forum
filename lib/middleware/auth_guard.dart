@@ -15,7 +15,8 @@ class AuthGuard {
     if (auth.status == AuthStatus.unknown) return null;
 
     final isAuthRoute = location == '/login' || location == '/register';
-    final isProtectedRoute = location == '/post/new' ||
+    final isProtectedRoute =
+        location == '/post/new' ||
         location.endsWith('/edit') ||
         location == '/profile';
 

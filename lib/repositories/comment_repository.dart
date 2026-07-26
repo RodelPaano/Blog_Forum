@@ -79,7 +79,6 @@ class CommentRepository extends GenericRepository<Comment> {
     }
   }
 
-
   @override
   Future<Comment> update(Comment item) async {
     try {

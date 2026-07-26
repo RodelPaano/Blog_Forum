@@ -90,7 +90,6 @@ class PostRepository extends GenericRepository<Post> {
     }
   }
 
-
   @override
   Future<Post> update(Post item) async {
     try {
