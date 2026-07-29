@@ -12,14 +12,52 @@ import '../models/user_profile.dart';
 import '../repositories/profile_repository.dart';
 import 'storage_service.dart';
 
-class AuthService {
+// Defines the contract for authentication operations
+abstract interface class IAuthService {
+  User? get currentUser;
+
+  Stream<AuthState> get authStateChanges;
+
+  Future<UserProfile?> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  });
+
+  Future<UserProfile?> signIn({
+    required String email,
+    required String password,
+  });
+
+  Future<void> signOut();
+
+  Future<UserProfile?> fetchProfile(String userId);
+
+  Future<UserProfile> updateProfile({
+    required String userId,
+    String? fullName,
+    File? avatarFile,
+    String? existingAvatarUrl,
+  });
+
+  Future<UserProfile> removeAvatar({
+    required String userId,
+    required String currentAvatarUrl,
+  });
+}
+
+// Implements the contract for authentication operations
+class AuthService implements IAuthService {
   final _storage = StorageService();
   final _profileRepo = ProfileRepository();
 
+  @override
   User? get currentUser => SupabaseService.auth.currentUser;
+  @override
   Stream<AuthState> get authStateChanges =>
       SupabaseService.auth.onAuthStateChange;
 
+  @override
   Future<UserProfile?> signUp({
     required String email,
     required String password,
@@ -62,6 +100,7 @@ class AuthService {
     }
   }
 
+  @override
   Future<UserProfile?> signIn({
     required String email,
     required String password,
@@ -101,10 +140,12 @@ class AuthService {
     }
   }
 
+  @override
   Future<void> signOut() async {
     await SupabaseService.auth.signOut();
   }
 
+  @override
   Future<UserProfile?> fetchProfile(String userId) async {
     final existing = await _profileRepo.getById(userId);
     if (existing != null) return existing;
@@ -124,6 +165,7 @@ class AuthService {
 
   /// Updates the authenticated user's profile. Handles avatar upload
   /// + safe deletion of the old avatar.
+  @override
   Future<UserProfile> updateProfile({
     required String userId,
     String? fullName,
@@ -163,6 +205,7 @@ class AuthService {
     }
   }
 
+  @override
   Future<UserProfile> removeAvatar({
     required String userId,
     required String currentAvatarUrl,

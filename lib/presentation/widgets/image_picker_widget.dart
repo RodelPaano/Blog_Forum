@@ -7,9 +7,9 @@ class ImagePickerWidget extends StatelessWidget {
   const ImagePickerWidget({
     super.key,
     required this.files,
-    required this.existingUrls,
+    this.existingUrls = const [],
     required this.onPick,
-    required this.onRemoveExisting,
+    this.onRemoveExisting,
     required this.onRemoveNew,
     this.maxImages = AppConfig.maxImagesPerPost,
   });
@@ -17,7 +17,7 @@ class ImagePickerWidget extends StatelessWidget {
   final List<File> files;
   final List<String> existingUrls;
   final VoidCallback onPick;
-  final void Function(int index) onRemoveExisting;
+  final void Function(int index)? onRemoveExisting;
   final void Function(int index) onRemoveNew;
   final int maxImages;
 
@@ -42,7 +42,7 @@ class ImagePickerWidget extends StatelessWidget {
               for (var i = 0; i < existingUrls.length; i++)
                 _Thumb(
                   imageProvider: NetworkImage(existingUrls[i]),
-                  onRemove: () => onRemoveExisting(i),
+                  onRemove: () => onRemoveExisting?.call(i),
                 ),
               for (var i = 0; i < files.length; i++)
                 _Thumb(
@@ -54,6 +54,7 @@ class ImagePickerWidget extends StatelessWidget {
                   onTap: onPick,
                   child: Container(
                     width: 110,
+                    height: 110,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       color: cs.surfaceContainerHigh,
@@ -82,29 +83,34 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          width: 110,
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 12,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: const CircleAvatar(
-              radius: 12,
-              backgroundColor: Colors.black54,
-              child: Icon(Icons.close, size: 14, color: Colors.white),
+    return SizedBox(
+      width: 110,
+      height: 110,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
+              ),
             ),
           ),
-        ),
-      ],
+          Positioned(
+            top: 4,
+            right: 12,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: const CircleAvatar(
+                radius: 12,
+                backgroundColor: Colors.black54,
+                child: Icon(Icons.close, size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

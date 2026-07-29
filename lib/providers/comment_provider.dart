@@ -44,25 +44,26 @@ class CommentProvider extends ChangeNotifier {
   }
 
   // ─── Add ───────────────────────────────────────────────
-  Future<Comment?> add({
+  Future<void> add({
     required String postId,
     required String content,
     required List<File> imageFiles,
   }) async {
     try {
-      final comment = await _service.add(
+      final created = await _service.add(
         postId: postId,
         content: content,
         imageFiles: imageFiles,
       );
-      _byPost.putIfAbsent(postId, () => []).add(comment);
+
+      _byPost[postId]?.add(created);
+
       _error = null;
+
       notifyListeners();
-      return comment;
     } on AppException catch (e) {
       _error = e.message;
       AppLogger.error('CommentProvider.add', e);
-      return null;
     }
   }
 

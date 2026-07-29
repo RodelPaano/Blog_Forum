@@ -1,10 +1,12 @@
+import 'package:blog_forum_app/presentation/widgets/auth_header_widget.dart';
+import 'package:blog_forum_app/utils/app_diallog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../widgets/loading_button.dart';
+import '../widgets/app_button_type.dart';
 import '../widgets/mobile_page.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -40,15 +42,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (ok) {
       context.go('/');
     } else if (auth.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.error!)));
+      AppDialog.showError(context, auth.error!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final auth = context.watch<AuthProvider>();
     return Scaffold(
       appBar: AppBar(
@@ -72,14 +71,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.person_add_alt_1, size: 64, color: cs.primary),
-              const SizedBox(height: 12),
-              Text(
-                'Create account',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              AuthHeader(
+                title: 'Create account',
+                subtitle: 'Join the community of bloggers',
               ),
               const SizedBox(height: 32),
               TextFormField(
@@ -120,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: Validators.password,
               ),
               const SizedBox(height: 24),
-              LoadingFilledButton(
+              AppButton(
                 label: 'Create Account',
                 isLoading: auth.isBusy,
                 onPressed: _submit,

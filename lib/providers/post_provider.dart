@@ -24,6 +24,9 @@ class PostProvider extends ChangeNotifier {
 
   // ─── Getters ───────────────────────────────────────────────
 
+  Post? _selectedPost;
+  Post? get selectedPost => _selectedPost;
+
   List<Post> get posts => _paginator.items;
   bool get isLoading => _loading;
   bool get hasMore => _paginator.hasMore;
@@ -31,17 +34,34 @@ class PostProvider extends ChangeNotifier {
 
   // ─── Load ──────────────────────────────────────────────────
 
-  Future<void> loadInitial() async {
+  Future<void> getPostById(String postId) async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
-      await _paginator.reset(
-        load: (page, limit) => _service.getAll(page: page, limit: limit),
-      );
+      final post = await _service.getPostById(postId);
+      _selectedPost = post;
     } on AppException catch (e) {
       _error = e.message;
-      AppLogger.error('PostProvider.loadInitial', e);
+      AppLogger.error('PostProvider.getPostById', e);
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Post?> fetchPost(String postId) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final post = await _service.getPostById(postId);
+      _selectedPost = post;
+      return post;
+    } on AppException catch (e) {
+      _error = e.message;
+      AppLogger.error('PostProvider.fetchPost', e);
+      return null;
     } finally {
       _loading = false;
       notifyListeners();
@@ -67,7 +87,7 @@ class PostProvider extends ChangeNotifier {
 
   // ─── Create ────────────────────────────────────────────────
 
-  Future<Post?> createPost({
+  Future<bool> createPost({
     required String title,
     required String content,
     required List<File> imageFiles,
@@ -76,17 +96,17 @@ class PostProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final post = await _service.create(
+      final created = await _service.create(
         title: title,
         content: content,
         imageFiles: imageFiles,
       );
-      _paginator.prepend(post);
-      return post;
+      _paginator.prepend(created);
+      return true;
     } on AppException catch (e) {
       _error = e.message;
       AppLogger.error('PostProvider.createPost', e);
-      return null;
+      return false;
     } finally {
       _loading = false;
       notifyListeners();

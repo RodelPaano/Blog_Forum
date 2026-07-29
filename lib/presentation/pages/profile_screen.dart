@@ -7,69 +7,57 @@ import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../widgets/loading_button.dart';
+import '../../utils/app_diallog.dart';
+import '../widgets/app_button_type.dart';
 import '../widgets/mobile_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _form = GlobalKey<FormState>();
-  final _name = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _picker = ImagePicker();
-  File? _avatar;
-
-  @override
-  void initState() {
-    super.initState();
-    _name.addListener(_onNameChanged);
-  }
-
-  void _onNameChanged() {
-    // optional: mark dirty if needed
-  }
+  File? _avatarFile;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final p = context.read<AuthProvider>().profile;
-    if (p != null && _name.text != p.fullName) {
-      _name.text = p.fullName;
+    final profile = context.read<AuthProvider>().profile;
+    if (profile != null && _nameController.text != profile.fullName) {
+      _nameController.text = profile.fullName;
     }
   }
 
-  Future<void> _pickAvatar() async {
-    final x = await _picker.pickImage(
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  // ─── Actions ─────────────────────────────────────────────────────────────
+
+  Future<void> _handlePickAvatar() async {
+    final picked = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 70,
       maxWidth: 800,
     );
-    if (x != null) setState(() => _avatar = File(x.path));
-  }
-
-  Future<void> _save() async {
-    if (!_form.currentState!.validate()) return;
-    final ok = await context.read<AuthProvider>().updateProfile(
-      fullName: _name.text.trim(),
-      avatarFile: _avatar,
-    );
-    if (!mounted) return;
-    if (ok) {
-      setState(() => _avatar = null);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Profile updated')));
-    } else {
-      final err = context.read<AuthProvider>().error ?? 'Update failed';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    if (picked != null) {
+      setState(() => _avatarFile = File(picked.path));
     }
   }
 
-  Future<void> _removeAvatar() async {
-    final ok = await showDialog<bool>(
+  Future<void> _handleDiscardNewPhoto() async {
+    setState(() => _avatarFile = null);
+  }
+
+  Future<void> _handleRemoveAvatar() async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Remove profile photo?'),
@@ -85,30 +73,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-    if (ok != true) return;
+
+    if (confirmed != true || !mounted) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final removed = await authProvider.removeAvatar();
     if (!mounted) return;
-    final removed = await context.read<AuthProvider>().removeAvatar();
-    if (!mounted) return;
+
     if (removed) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Profile photo removed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile photo removed')),
+      );
+    } else if (authProvider.error != null) {
+      AppDialog.showError(context, authProvider.error!);
     }
   }
 
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
+  Future<void> _handleSaveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.updateProfile(
+      fullName: _nameController.text.trim(),
+      avatarFile: _avatarFile,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() => _avatarFile = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated')),
+      );
+    } else {
+      final err = authProvider.error ?? 'Update failed';
+      AppDialog.showError(context, err);
+    }
   }
+
+  Future<void> _handleSignOut() async {
+    await context.read<AuthProvider>().signOut();
+    if (!mounted) return;
+    context.go('/');
+  }
+
+  // ─── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final profile = auth.profile;
     final cs = Theme.of(context).colorScheme;
-    final ImageProvider? preview = _avatar != null
-        ? FileImage(_avatar!)
+
+    final ImageProvider? preview = _avatarFile != null
+        ? FileImage(_avatarFile!)
         : (profile?.avatarUrl != null
               ? CachedNetworkImageProvider(profile!.avatarUrl!)
               : null);
@@ -120,17 +138,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await auth.signOut();
-              if (!context.mounted) return;
-              context.go('/');
-            },
+            onPressed: _handleSignOut,
           ),
         ],
       ),
       body: MobilePage(
         child: Form(
-          key: _form,
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -166,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       right: 0,
                       child: FloatingActionButton.small(
                         heroTag: 'avatar_pick',
-                        onPressed: _pickAvatar,
+                        onPressed: _handlePickAvatar,
                         child: const Icon(Icons.camera_alt),
                       ),
                     ),
@@ -174,21 +188,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              if (_avatar != null)
+              if (_avatarFile != null)
                 TextButton.icon(
-                  onPressed: () => setState(() => _avatar = null),
+                  onPressed: _handleDiscardNewPhoto,
                   icon: const Icon(Icons.close),
                   label: const Text('Discard new photo'),
                 )
               else if (profile?.avatarUrl != null)
                 TextButton.icon(
-                  onPressed: _removeAvatar,
+                  onPressed: _handleRemoveAvatar,
                   icon: const Icon(Icons.delete_outline),
                   label: const Text('Remove photo'),
                 ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _name,
+                controller: _nameController,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   labelText: 'Full Name',
@@ -204,10 +218,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 subtitle: const Text('Email cannot be changed'),
               ),
               const SizedBox(height: 24),
-              LoadingFilledButton(
+              AppButton(
                 label: 'Save Changes',
                 isLoading: auth.isBusy,
-                onPressed: _save,
+                onPressed: _handleSaveProfile,
               ),
             ],
           ),

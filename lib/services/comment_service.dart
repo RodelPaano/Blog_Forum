@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blog_forum_app/core/exceptions.dart' show AuthException;
 import 'package:image_picker/image_picker.dart';
 
 import '../core/config.dart';
@@ -29,8 +30,13 @@ class CommentService {
     required String postId,
     required String content,
     required List<File> imageFiles,
+    String? userId,
   }) async {
+    userId ??= SupabaseService.currentUserId;
     // Validation
+    if (userId.isEmpty) {
+      throw const AuthException('User must be logged in to comment');
+    }
     if (content.trim().isEmpty && imageFiles.isEmpty) {
       throw ArgumentError('Comment must have content or at least one image.');
     }
@@ -48,11 +54,11 @@ class CommentService {
     }
 
     // Build and save
-    return _repo.create(
+    return await _repo.create(
       Comment(
         id: '',
         postId: postId,
-        userId: SupabaseService.currentUserId,
+        userId: userId,
         content: cleanContent,
         images: urls,
         createdAt: DateTime.now(),
@@ -71,9 +77,15 @@ class CommentService {
     required List<String> toDelete,
   }) async {
     // Validation
+    final user = SupabaseService.currentUserId;
     final hasContent = content.trim().isNotEmpty;
     final hasImages = existingImages.isNotEmpty || newFiles.isNotEmpty;
 
+    if (user.isEmpty) {
+      throw const AuthException(
+        'User must be logged in to update this comment',
+      );
+    }
     if (!hasContent && !hasImages) {
       throw ArgumentError(
         'Updated comment must have content or at least one image.',

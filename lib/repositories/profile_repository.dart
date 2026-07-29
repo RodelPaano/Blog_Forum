@@ -18,7 +18,7 @@ class ProfileRepository extends GenericRepository<UserProfile> {
           .map((e) => UserProfile.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -33,7 +33,7 @@ class ProfileRepository extends GenericRepository<UserProfile> {
       if (res == null) return null;
       return UserProfile.fromJson(res);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -56,7 +56,7 @@ class ProfileRepository extends GenericRepository<UserProfile> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -105,7 +105,7 @@ class ProfileRepository extends GenericRepository<UserProfile> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -123,7 +123,7 @@ class ProfileRepository extends GenericRepository<UserProfile> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 }

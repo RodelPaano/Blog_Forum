@@ -34,6 +34,7 @@ dependencies:
   uuid: ^4.5.1                 # Unique IDs for storage paths
   mime: ^2.0.0                 # MIME type detection
   path: ^1.9.0                 # File path utilities
+  flutter_bloc: ^9.1.1
 
 dev_dependencies:
   flutter_test:

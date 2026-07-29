@@ -23,6 +23,14 @@ class PostService {
     return _repo.getAll(page: page, limit: limit);
   }
 
+  Future<Post> getPostById(String postId) async {
+    final post = await _repo.getById(postId);
+
+    if (post == null) throw Exception('Post not found');
+
+    return post;
+  }
+
   // ─── Create ────────────────────────────────────────────────
 
   Future<Post> create({

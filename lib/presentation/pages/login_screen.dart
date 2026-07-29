@@ -1,11 +1,14 @@
+import 'package:blog_forum_app/presentation/widgets/auth_header_widget.dart';
+import 'package:blog_forum_app/utils/app_diallog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../widgets/loading_button.dart';
+import '../widgets/app_button_type.dart';
 import '../widgets/mobile_page.dart';
+import '../widgets/text_field_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _obscure = true;
 
   @override
   void dispose() {
@@ -35,16 +37,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (ok) {
       context.go('/');
     } else if (auth.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.error!)));
+      AppDialog.showError(context, auth.error!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -67,54 +67,32 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.forum_rounded, size: 64, color: cs.primary),
-              const SizedBox(height: 12),
-              Text(
-                'Welcome back',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Sign in to your account',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: cs.outline),
+              AuthHeader(
+                title: 'Welcome back',
+                subtitle: 'Sign in to your account',
               ),
               const SizedBox(height: 32),
-              TextFormField(
+              TextFieldWidget(
                 controller: _email,
+                labelText: 'Email Address',
+                prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
                 enableSuggestions: false,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
                 validator: Validators.email,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              TextFieldWidget(
                 controller: _password,
-                obscureText: _obscure,
+                labelText: 'Password',
+                prefixIcon: Icons.lock_outline,
+                obscureText: true,
                 textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
                 validator: Validators.password,
+                onFieldSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 24),
-              LoadingFilledButton(
+              AppButton(
                 label: 'Sign In',
                 isLoading: auth.isBusy,
                 onPressed: _submit,

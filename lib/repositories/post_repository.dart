@@ -26,7 +26,7 @@ class PostRepository extends GenericRepository<Post> {
           .map((e) => Post.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -41,7 +41,7 @@ class PostRepository extends GenericRepository<Post> {
       if (res == null) return null;
       return Post.fromJson(res);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -61,7 +61,7 @@ class PostRepository extends GenericRepository<Post> {
           .map((e) => Post.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -86,7 +86,7 @@ class PostRepository extends GenericRepository<Post> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -108,7 +108,7 @@ class PostRepository extends GenericRepository<Post> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -119,7 +119,7 @@ class PostRepository extends GenericRepository<Post> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 }

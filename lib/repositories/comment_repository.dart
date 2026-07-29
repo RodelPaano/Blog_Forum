@@ -20,7 +20,7 @@ class CommentRepository extends GenericRepository<Comment> {
           .map((e) => Comment.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -35,7 +35,7 @@ class CommentRepository extends GenericRepository<Comment> {
           .map((e) => Comment.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -50,15 +50,12 @@ class CommentRepository extends GenericRepository<Comment> {
       if (res == null) return null;
       return Comment.fromJson(res);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
   @override
   Future<Comment> create(Comment item) async {
-    if (item.userId.isEmpty) {
-      throw const AuthException('User must be logged in to comment');
-    }
     try {
       await ProfileRepository().ensureProfileExists(item.userId);
       final res = await SupabaseService.client
@@ -75,7 +72,7 @@ class CommentRepository extends GenericRepository<Comment> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -96,7 +93,7 @@ class CommentRepository extends GenericRepository<Comment> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 
@@ -107,7 +104,7 @@ class CommentRepository extends GenericRepository<Comment> {
     } on PostgrestException catch (e) {
       throw DatabaseException(e.message, code: e.code);
     } catch (e) {
-      throw mapError(e);
+      throw DatabaseException(e.toString());
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:blog_forum_app/core/logger.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/exceptions.dart';
@@ -11,7 +12,9 @@ import '../services/auth_service.dart';
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
-  final _service = AuthService();
+  AuthProvider(this._authService);
+
+  final IAuthService _authService;
 
   AuthStatus _status = AuthStatus.unknown;
   UserProfile? _profile;
@@ -28,15 +31,24 @@ class AuthProvider extends ChangeNotifier {
   get errorMessage => null;
 
   void initialize() {
-    _sub = _service.authStateChanges.listen((event) async {
-      final session = event.session;
-      if (session != null) {
-        _profile = await _service.fetchProfile(session.user.id);
-        _status = AuthStatus.authenticated;
-      } else {
-        _profile = null;
+    _sub = _authService.authStateChanges.listen((event) async {
+      try {
+        final session = event.session;
+        if (session != null) {
+          _profile = await _authService.fetchProfile(session.user.id);
+          _status = AuthStatus.authenticated;
+        } else {
+          _profile = null;
+          _status = AuthStatus.unauthenticated;
+        }
+
+        _error = null;
+      } catch (e) {
+        AppLogger.error('Error on auth state change', e);
         _status = AuthStatus.unauthenticated;
+        _error = e.toString();
       }
+
       notifyListeners();
     });
   }
@@ -44,7 +56,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signIn(String email, String password) async {
     _setBusy(true);
     try {
-      _profile = await _service.signIn(email: email, password: password);
+      _profile = await _authService.signIn(email: email, password: password);
       _error = null;
       return true;
     } on AppException catch (e) {
@@ -58,7 +70,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signUp(String email, String password, String fullName) async {
     _setBusy(true);
     try {
-      _profile = await _service.signUp(
+      _profile = await _authService.signUp(
         email: email,
         password: password,
         fullName: fullName,
@@ -74,20 +86,20 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _service.signOut();
+    await _authService.signOut();
   }
 
   Future<void> refreshProfile() async {
     final id = SupabaseService.currentUserId;
     if (id.isEmpty) return;
-    _profile = await _service.fetchProfile(id);
+    _profile = await _authService.fetchProfile(id);
     notifyListeners();
   }
 
   Future<bool> updateProfile({String? fullName, File? avatarFile}) async {
     _setBusy(true);
     try {
-      _profile = await _service.updateProfile(
+      _profile = await _authService.updateProfile(
         userId: SupabaseService.currentUserId,
         fullName: fullName,
         avatarFile: avatarFile,
@@ -108,7 +120,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final current = _profile?.avatarUrl;
       if (current == null || current.isEmpty) return true;
-      _profile = await _service.removeAvatar(
+      _profile = await _authService.removeAvatar(
         userId: SupabaseService.currentUserId,
         currentAvatarUrl: current,
       );

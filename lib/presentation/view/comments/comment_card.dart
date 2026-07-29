@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/comment.dart';
-import '../../providers/auth_provider.dart';
-import '../../utils/date_utils.dart';
-import 'app_avatar.dart';
-import 'image_gallery.dart';
+import '../../../models/comment.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../utils/date_utils.dart';
+import '../../widgets/app_avatar.dart';
+import '../../widgets/image_gallery.dart';
 
 class CommentCard extends StatelessWidget {
   const CommentCard({
