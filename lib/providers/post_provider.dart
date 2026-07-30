@@ -136,6 +136,7 @@ class PostProvider extends ChangeNotifier {
         imagesToDelete: imagesToDelete,
       );
       _paginator.replace(updated);
+      _selectedPost = updated;
       return updated;
     } on AppException catch (e) {
       _error = e.message;
