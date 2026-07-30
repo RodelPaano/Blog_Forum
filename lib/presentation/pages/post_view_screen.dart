@@ -86,6 +86,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 final updated = await context.push<Post>(
                   '/post/${post.id}/edit',
                 );
+                if (!mounted) return;
                 if (updated != null && mounted) {
                   context.read<PostProvider>().refreshSelectedPost(updated);
                 }
