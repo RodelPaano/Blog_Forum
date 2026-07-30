@@ -24,7 +24,7 @@ class AppConfig {
   static const int pageSize = 10;
   static const int maxImagesPerPost = 8;
   static const int maxImagesPerComment = 4;
-  static const int maxImageBytes = 2 * 1024 * 1024; // 2 MB
+  static const int maxImageBytes = 5 * 1024 * 1024; // 5 MB
   static const int maxImageDimension = 4096; // anti-decompression-bomb
   static const int minImageDimension = 32;
   static const int maxTitleLength = 200;

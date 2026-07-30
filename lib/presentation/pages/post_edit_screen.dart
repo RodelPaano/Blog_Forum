@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/config.dart';
 import '../../models/post.dart';
 import '../../providers/post_provider.dart';
 import '../../utils/app_diallog.dart';
+import '../controllers/post_actions_controller.dart';
 import '../view/posts/post_edit_view.dart';
 
 class PostEditScreen extends StatefulWidget {
@@ -20,8 +19,6 @@ class PostEditScreen extends StatefulWidget {
 
 class _PostEditScreenState extends State<PostEditScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _picker = ImagePicker();
-
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
 
@@ -34,7 +31,14 @@ class _PostEditScreenState extends State<PostEditScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPost();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPost());
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPost() async {
@@ -60,35 +64,19 @@ class _PostEditScreenState extends State<PostEditScreen> {
   }
 
   Future<void> _pickImages() async {
-    final remain =
-        AppConfig.maxImagesPerPost -
-        (_existingImages.length + _newFiles.length);
-    if (remain <= 0) {
-      AppDialog.showError(
-        context,
-        'Maximum of ${AppConfig.maxImagesPerPost} images allowed per post.',
-      );
-      return;
-    }
-
-    final picks = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 800);
-    if (picks.isEmpty) return;
-
-    setState(() {
-      _newFiles.addAll(picks.take(remain).map((x) => File(x.path)));
-    });
+    final valid = await PostActionsController.pickImages(
+      context,
+      currentCount: _existingImages.length + _newFiles.length,
+    );
+    if (valid.isNotEmpty) setState(() => _newFiles.addAll(valid));
   }
 
   void _removeNewImage(int index) {
-    setState(() {
-      _newFiles.removeAt(index);
-    });
+    setState(() => _newFiles.removeAt(index));
   }
 
   void _removeExistingImage(int index) {
-    setState(() {
-      _toDelete.add(_existingImages.removeAt(index));
-    });
+    setState(() => _toDelete.add(_existingImages.removeAt(index)));
   }
 
   Future<void> _submit() async {
@@ -115,13 +103,6 @@ class _PostEditScreenState extends State<PostEditScreen> {
       final err = provider.error ?? 'Update failed';
       AppDialog.showError(context, err);
     }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _contentController.dispose();
-    super.dispose();
   }
 
   @override

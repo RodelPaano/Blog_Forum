@@ -67,7 +67,7 @@ class PostCard extends StatelessWidget {
 
       showInfo: true,
 
-      subtitle: AppDate.relative(post.createdAt),
+      subtitle: AppDate.display(post.createdAt, post.updatedAt),
     );
   }
 

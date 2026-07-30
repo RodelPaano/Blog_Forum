@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/config.dart';
@@ -46,7 +47,9 @@ class ImagePickerWidget extends StatelessWidget {
                 ),
               for (var i = 0; i < files.length; i++)
                 _Thumb(
-                  imageProvider: FileImage(files[i]),
+                  imageProvider: kIsWeb 
+                      ? NetworkImage(files[i].path) as ImageProvider
+                      : FileImage(files[i]),
                   onRemove: () => onRemoveNew(i),
                 ),
               if (_total < maxImages)

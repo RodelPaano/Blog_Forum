@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/config.dart';
 import '../../providers/post_provider.dart';
 import '../../utils/app_diallog.dart';
+import '../controllers/post_actions_controller.dart';
 import '../view/posts/post_create_view.dart';
 
 class PostCreateScreen extends StatefulWidget {
@@ -20,7 +19,6 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  final _picker = ImagePicker();
   final List<File> _imageFiles = [];
 
   @override
@@ -31,27 +29,15 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
   }
 
   Future<void> _pickImages() async {
-    final remaining = AppConfig.maxImagesPerPost - _imageFiles.length;
-    if (remaining <= 0) {
-      AppDialog.showError(
-        context,
-        'Maximum of ${AppConfig.maxImagesPerPost} images allowed per post.',
-      );
-      return;
-    }
-
-    final picks = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 800);
-    if (picks.isEmpty) return;
-
-    setState(() {
-      _imageFiles.addAll(picks.take(remaining).map((x) => File(x.path)));
-    });
+    final valid = await PostActionsController.pickImages(
+      context,
+      currentCount: _imageFiles.length,
+    );
+    if (valid.isNotEmpty) setState(() => _imageFiles.addAll(valid));
   }
 
   void _removeImage(int index) {
-    setState(() {
-      _imageFiles.removeAt(index);
-    });
+    setState(() => _imageFiles.removeAt(index));
   }
 
   Future<void> _submitPost() async {

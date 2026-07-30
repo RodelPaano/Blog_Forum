@@ -52,11 +52,7 @@ class ImageGrid extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final height = urls.length <= 3 ? 120.0 : 240.0;
-
-    return SizedBox(
-      height: height,
-      child: GridView.builder(
+    return GridView.builder(
         physics: const NeverScrollableScrollPhysics(),
 
         shrinkWrap: true,
@@ -86,8 +82,7 @@ class ImageGrid extends StatelessWidget {
             fit: BoxFit.cover,
           );
         },
-      ),
-    );
+      );
   }
 }
 

@@ -23,57 +23,159 @@ class CommentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isOwner = context.read<AuthProvider>().profile?.id == comment.userId;
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final isEdited =
+        (comment.updatedAt.millisecondsSinceEpoch -
+                    comment.createdAt.millisecondsSinceEpoch)
+                .abs() >=
+            1000;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                AppAvatar(
-                  name: comment.authorName,
-                  imageUrl: comment.authorAvatar,
-                  radius: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        comment.authorName ?? 'Anonymous',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        AppDate.display(comment.createdAt, comment.updatedAt),
-                        style: TextStyle(color: cs.outline, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isOwner)
-                  PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'edit') onEdit();
-                      if (v == 'delete') onDelete();
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(comment.content),
-            if (comment.images.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ImageStrip(urls: comment.images, size: 70),
-            ],
-          ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(isDesktop ? 18 : 14),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.35),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AppAvatar(
+                name: comment.authorName,
+                imageUrl: comment.authorAvatar,
+                radius: isDesktop ? 19 : 17,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            comment.authorName?.trim().isNotEmpty == true
+                                ? comment.authorName!
+                                : 'Anonymous',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isDesktop ? 15 : 14,
+                              color: cs.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isEdited) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'edited',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: cs.outline,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      AppDate.display(comment.createdAt, comment.updatedAt),
+                      style: TextStyle(
+                        color: cs.outline,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isOwner)
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    size: 20,
+                    color: cs.outline,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  onSelected: (v) {
+                    if (v == 'edit') onEdit();
+                    if (v == 'delete') onDelete();
+                  },
+                  itemBuilder: (ctx) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text('Edit', style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: cs.error,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Delete',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: cs.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SelectableText(
+            comment.content,
+            style: TextStyle(
+              fontSize: isDesktop ? 15 : 14,
+              height: 1.45,
+              color: cs.onSurface,
+            ),
+          ),
+          if (comment.images.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ImageStrip(
+              urls: comment.images,
+              size: isDesktop ? 80 : 70,
+            ),
+          ],
+        ],
       ),
     );
   }

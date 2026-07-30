@@ -9,6 +9,7 @@ class CommentFormView extends StatelessWidget {
   const CommentFormView({
     super.key,
     required this.controller,
+    this.focusNode,
     required this.newFiles,
     required this.existingImages,
     required this.toDelete,
@@ -20,6 +21,7 @@ class CommentFormView extends StatelessWidget {
   });
 
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final List<File> newFiles;
   final List<String> existingImages;
   final List<String> toDelete;
@@ -34,175 +36,212 @@ class CommentFormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = Theme.of(context).colorScheme;
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 850),
-        child: Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          elevation: 4,
-          shadowColor: Colors.black12,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// HEADER
-                Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.all(isDesktop ? 22 : 16),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// HEADER
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _isEditing
+                      ? Icons.edit_note_rounded
+                      : Icons.mode_comment_outlined,
+                  color: cs.onPrimaryContainer,
+                  size: 22,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(
-                        .1,
-                      ),
-                      child: Icon(
-                        Icons.comment_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _isEditing ? "Edit Comment" : "Add a Comment",
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Row(
+                      children: [
+                        Text(
+                          _isEditing ? "Edit Comment" : "Add a Comment",
+                          style: TextStyle(
+                            fontSize: isDesktop ? 16 : 15,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _isEditing
-                                ? "Update your comment"
-                                : "Share your thoughts",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey,
+                        ),
+                        if (_isEditing) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              "Editing Active",
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: cs.primary,
+                              ),
                             ),
                           ),
                         ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _isEditing
+                          ? "Modify your response below"
+                          : "Share your thoughts with the community",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.outline,
                       ),
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
 
-                const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-                /// TEXT FIELD
-                TextField(
-                  controller: controller,
-                  minLines: 3,
-                  maxLines: 6,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    hintText: "Write your comment...",
-                    filled: true,
-                    fillColor: theme.colorScheme.surface,
-                    contentPadding: const EdgeInsets.all(18),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
+          /// TEXT FIELD
+          TextField(
+            controller: controller,
+            focusNode: focusNode,
+            minLines: isDesktop ? 3 : 2,
+            maxLines: 6,
+            textInputAction: TextInputAction.newline,
+            style: TextStyle(fontSize: isDesktop ? 15 : 14, color: cs.onSurface),
+            decoration: InputDecoration(
+              hintText: _isEditing
+                  ? "Update your comment..."
+                  : "Write a constructive comment...",
+              hintStyle: TextStyle(
+                color: cs.outline.withValues(alpha: 0.8),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: cs.surfaceContainerHigh.withValues(alpha: 0.5),
+              contentPadding: const EdgeInsets.all(16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: cs.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: cs.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: cs.primary,
+                  width: 1.8,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          /// IMAGE PICKER
+          ImagePickerWidget(
+            files: newFiles,
+            existingUrls: existingImages,
+            onPick: onPick,
+            onRemoveExisting: (index) {
+              toDelete.add(existingImages[index]);
+              existingImages.removeAt(index);
+              onChanged();
+            },
+            onRemoveNew: (index) {
+              newFiles.removeAt(index);
+              onChanged();
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          Divider(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            height: 1,
+          ),
+
+          const SizedBox(height: 14),
+
+          /// BUTTONS
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (onCancel != null) ...[
+                OutlinedButton.icon(
+                  onPressed: onCancel,
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  label: const Text("Cancel"),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: theme.colorScheme.primary,
-                        width: 2,
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 18),
-
-                /// IMAGE SECTION TITLE
-                Row(
-                  children: [
-                    Icon(
-                      Icons.photo_library_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Images",
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                /// IMAGE PICKER
-                ImagePickerWidget(
-                  files: newFiles,
-                  existingUrls: existingImages,
-                  onPick: onPick,
-                  onRemoveExisting: (index) {
-                    toDelete.add(existingImages[index]);
-                    existingImages.removeAt(index);
-                    onChanged();
-                  },
-                  onRemoveNew: (index) {
-                    newFiles.removeAt(index);
-                    onChanged();
-                  },
-                ),
-
-                const SizedBox(height: 22),
-
-                Divider(color: Colors.grey.shade300, height: 1),
-
-                const SizedBox(height: 18),
-
-                /// BUTTONS
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (onCancel != null)
-                      OutlinedButton(
-                        onPressed: onCancel,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(110, 46),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text("Cancel"),
-                      ),
-
-                    if (onCancel != null) const SizedBox(width: 12),
-
-                    FilledButton.icon(
-                      onPressed: onSubmit,
-                      icon: Icon(_isEditing ? Icons.check : Icons.send_rounded),
-                      label: Text(
-                        _isEditing ? "Update Comment" : "Post Comment",
-                      ),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(180, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox(width: 10),
               ],
-            ),
+
+              FilledButton.icon(
+                onPressed: onSubmit,
+                icon: Icon(
+                  _isEditing ? Icons.check_rounded : Icons.send_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  _isEditing ? "Update Comment" : "Post Comment",
+                ),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 42),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:blog_forum_app/utils/app_diallog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/supabase_client.dart';
@@ -10,8 +10,8 @@ import '../../models/comment.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/comment_provider.dart';
 import '../../providers/post_provider.dart';
-import '../../utils/app_diallog.dart';
-import '../../utils/image_utils.dart';
+
+import '../controllers/post_actions_controller.dart';
 import '../view/comments/comment_form_view.dart';
 import '../view/comments/comment_section_view.dart';
 import '../view/posts/post_details_view.dart';
@@ -20,7 +20,6 @@ import '../widgets/login_required_widget.dart';
 
 class PostViewScreen extends StatefulWidget {
   const PostViewScreen({super.key, required this.postId});
-
   final String postId;
 
   @override
@@ -28,13 +27,6 @@ class PostViewScreen extends StatefulWidget {
 }
 
 class _PostViewScreenState extends State<PostViewScreen> {
-  final _comment = TextEditingController();
-  final List<File> _newFiles = [];
-  final List<String> _existingImages = [];
-  final List<String> _toDelete = [];
-  final _picker = ImagePicker();
-  Comment? _editingComment;
-
   @override
   void initState() {
     super.initState();
@@ -44,124 +36,24 @@ class _PostViewScreenState extends State<PostViewScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _comment.dispose();
-    super.dispose();
-  }
-
-  void _resetForm() {
-    _comment.clear();
-    _newFiles.clear();
-    _existingImages.clear();
-    _toDelete.clear();
-    setState(() => _editingComment = null);
-  }
-
-  Future<void> _submitComment() async {
-    if (_comment.text.trim().isEmpty) return;
-    final provider = context.read<CommentProvider>();
-
-    if (_editingComment != null) {
-      await provider.update(
-        original: _editingComment!,
-        content: _comment.text.trim(),
-        existingImages: _existingImages,
-        newFiles: _newFiles,
-        toDelete: _toDelete,
-      );
-    } else {
-      await provider.add(
-        postId: widget.postId,
-        content: _comment.text.trim(),
-        imageFiles: _newFiles,
-      );
-    }
-
-    if (!mounted) return;
-    if (provider.error == null) _resetForm();
-  }
-
-  void _startEditComment(Comment comment) {
-    setState(() {
-      _editingComment = comment;
-      _comment.text = comment.content;
-      _existingImages
-        ..clear()
-        ..addAll(comment.images);
-    });
-  }
-
-  Future<void> _deleteComment(Comment comment) async {
-    final confirmed = await AppDialog.confirmDialog(
-      context,
-      title: 'Delete Comment',
-      subtitle: 'Are you sure you want to delete this comment?',
-      cancelText: 'Cancel Delete',
-      confirm: 'confirm',
+  void _openCommentSheet({Comment? editingComment}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) =>
+          _CommentSheet(postId: widget.postId, editingComment: editingComment),
     );
-    if (!confirmed || !mounted) return;
-
-    await context.read<CommentProvider>().delete(
-      comment: comment,
-      imageUrls: comment.images,
-    );
-  }
-
-  Future<void> _deletePost() async {
-    final confirmed = await AppDialog.confirmDialog(
-      context,
-      title: 'Delete Post',
-      subtitle: 'Are you sure? This cannot be undone.',
-    );
-    if (!confirmed || !mounted) return;
-
-    final postProvider = context.read<PostProvider>();
-    await postProvider.deletePost(
-      postId: widget.postId,
-      imageUrls: postProvider.selectedPost!.images,
-    );
-    if (!mounted) return;
-
-    if (postProvider.error == null) {
-      context.go('/');
-    } else {
-      AppDialog.showError(context, postProvider.error!);
-    }
-  }
-
-  Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage();
-    if (picked.isEmpty) return;
-
-    final valid = <File>[];
-    final rejected = <String>[];
-
-    for (final xFile in picked) {
-      if (await ImageUtils.isValidImage(xFile)) {
-        valid.add(File(xFile.path));
-      } else {
-        rejected.add(xFile.name);
-      }
-    }
-
-    if (!mounted) return;
-
-    if (rejected.isNotEmpty) {
-      AppDialog.showError(
-        context,
-        'Skipped ${rejected.length} invalid file(s): ${rejected.join(', ')}',
-      );
-    }
-
-    if (valid.isNotEmpty) {
-      setState(() => _newFiles.addAll(valid));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final postProvider = context.watch<PostProvider>();
+    final cs = Theme.of(context).colorScheme;
 
     if (postProvider.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -194,40 +86,187 @@ class _PostViewScreenState extends State<PostViewScreen> {
             IconButton(
               icon: const Icon(Icons.delete_outline),
               tooltip: 'Delete Post',
-              onPressed: _deletePost,
+              onPressed: () => PostActionsController.deletePost(
+                context,
+                postId: widget.postId,
+                imageUrls: post.images,
+              ),
             ),
           ],
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PostDetailView(post: post),
-            const SizedBox(height: 24),
-            if (loggedIn) ...[
-              CommentFormView(
-                controller: _comment,
-                newFiles: _newFiles,
-                existingImages: _existingImages,
-                toDelete: _toDelete,
-                editingComment: _editingComment,
-                onSubmit: _submitComment,
-                onCancel: _editingComment != null ? _resetForm : null,
-                onChanged: () => setState(() {}),
-                onPick: _pickImages,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 850),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PostDetailView(post: post),
+                const SizedBox(height: 24),
+                if (loggedIn) ...[
+                  CommentSectionView(
+                    postId: post.id,
+                    onEdit: (c) => _openCommentSheet(editingComment: c),
+                    onDelete: (c) => PostActionsController.deleteComment(
+                      context,
+                      comment: c,
+                    ),
+                  ),
+                ] else
+                  const LoginRequiredWidget(),
+                const SizedBox(height: 80),
+              ],
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: loggedIn
+          ? FloatingActionButton.extended(
+              heroTag: 'commentFab',
+              onPressed: () => _openCommentSheet(),
+              icon: const Icon(Icons.comment_outlined),
+              label: const Text('Comment'),
+              backgroundColor: cs.primaryContainer,
+              foregroundColor: cs.onPrimaryContainer,
+            )
+          : null,
+    );
+  }
+}
+
+// ─── Self-contained bottom sheet for adding/editing comments ─────────────
+
+class _CommentSheet extends StatefulWidget {
+  const _CommentSheet({required this.postId, this.editingComment});
+  final String postId;
+  final Comment? editingComment;
+
+  @override
+  State<_CommentSheet> createState() => _CommentSheetState();
+}
+
+class _CommentSheetState extends State<_CommentSheet> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  final List<File> _newFiles = [];
+  final List<String> _existingImages = [];
+  final List<String> _toDelete = [];
+  bool _submitting = false;
+
+  bool get _isEditing => widget.editingComment != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      _controller.text = widget.editingComment!.content;
+      _existingImages.addAll(widget.editingComment!.images);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      if (_isEditing) {
+        _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: _controller.text.length),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final valid = await PostActionsController.pickImages(
+      context,
+      currentCount: _existingImages.length + _newFiles.length,
+    );
+    if (valid.isNotEmpty) setState(() => _newFiles.addAll(valid));
+  }
+
+  Future<void> _submit() async {
+    if (_controller.text.trim().isEmpty && _newFiles.isEmpty) return;
+
+    setState(() => _submitting = true);
+    final provider = context.read<CommentProvider>();
+
+    if (_isEditing) {
+      await provider.update(
+        original: widget.editingComment!,
+        content: _controller.text.trim(),
+        existingImages: _existingImages,
+        newFiles: _newFiles,
+        toDelete: _toDelete,
+      );
+    } else {
+      await provider.add(
+        postId: widget.postId,
+        content: _controller.text.trim(),
+        imageFiles: _newFiles,
+      );
+    }
+
+    if (!mounted) return;
+    if (provider.error == null) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _submitting = false);
+      AppDialog.showError(context, provider.error!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 16),
-              CommentSectionView(
-                postId: post.id,
-                onEdit: _startEditComment,
-                onDelete: _deleteComment,
+              AbsorbPointer(
+                absorbing: _submitting,
+                child: Opacity(
+                  opacity: _submitting ? 0.6 : 1.0,
+                  child: CommentFormView(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    newFiles: _newFiles,
+                    existingImages: _existingImages,
+                    toDelete: _toDelete,
+                    editingComment: widget.editingComment,
+                    onSubmit: _submit,
+                    onCancel: () => Navigator.of(context).pop(),
+                    onChanged: () => setState(() {}),
+                    onPick: _pickImages,
+                  ),
+                ),
               ),
-            ] else
-              const LoginRequiredWidget(),
-            const SizedBox(height: 24),
-          ],
+              if (_submitting) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+              ],
+            ],
+          ),
         ),
       ),
     );
