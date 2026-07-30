@@ -35,10 +35,7 @@ class AppRouter {
       GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(
-        path: '/post/new',
-        builder: (_, __) => const PostCreateScreen(),
-      ),
+      GoRoute(path: '/post/new', builder: (_, __) => const PostCreateScreen()),
       GoRoute(
         path: '/post/:id',
         builder: (_, s) => PostViewScreen(postId: s.pathParameters['id']!),

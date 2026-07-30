@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/supabase_client.dart';
 import '../../models/comment.dart';
+import '../../models/post.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/comment_provider.dart';
 import '../../providers/post_provider.dart';
@@ -81,7 +82,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit Post',
-              onPressed: () => context.push('/post/${post.id}/edit'),
+              onPressed: () async {
+                final updated = await context.push<Post>(
+                  '/post/${post.id}/edit',
+                );
+                if (updated != null && mounted) {
+                  context.read<PostProvider>().refreshSelectedPost(updated);
+                }
+              },
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
