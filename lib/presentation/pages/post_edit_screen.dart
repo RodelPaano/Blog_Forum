@@ -43,9 +43,10 @@ class _PostEditScreenState extends State<PostEditScreen> {
 
   Future<void> _loadPost() async {
     final provider = context.read<PostProvider>();
-    final post = await provider.fetchPost(widget.postId);
+    Post? post = (provider.selectedPost?.id == widget.postId)
+        ? provider.selectedPost
+        : await provider.fetchPost(widget.postId);
     if (!mounted) return;
-
     if (post == null) {
       if (provider.error != null) {
         AppDialog.showError(context, provider.error!);

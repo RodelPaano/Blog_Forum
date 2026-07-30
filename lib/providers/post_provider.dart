@@ -176,6 +176,10 @@ class PostProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearSelectedPost() {
+    _selectedPost = null;
+  }
+
   // ─── Helpers ───────────────────────────────────────────────
 
   void clearError() {

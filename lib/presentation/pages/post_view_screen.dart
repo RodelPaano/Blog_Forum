@@ -32,9 +32,21 @@ class _PostViewScreenState extends State<PostViewScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PostProvider>().getPostById(widget.postId);
+      if (!mounted) return;
+
+      final provider = context.read<PostProvider>();
+
+      if (provider.selectedPost?.id != widget.postId) {
+        provider.getPostById(widget.postId);
+      }
       context.read<CommentProvider>().loadFor(widget.postId);
     });
+  }
+
+  @override
+  void dispose() {
+    context.read<PostProvider>().clearSelectedPost();
+    super.dispose();
   }
 
   void _openCommentSheet({Comment? editingComment}) {
