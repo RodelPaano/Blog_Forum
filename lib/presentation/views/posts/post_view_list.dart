@@ -88,8 +88,12 @@ class _PostListViewState extends State<PostListView> {
           else
             ...provider.posts.map(
               (Post post) => Padding(
+                key: ValueKey(post.id),
                 padding: const EdgeInsets.only(bottom: 14),
-                child: PostCard(post: post),
+                child: PostCard(
+                  key: ValueKey('${post.id}-${post.authorAvatar}'),
+                  post: post,
+                ),
               ),
             ),
 

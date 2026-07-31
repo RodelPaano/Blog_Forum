@@ -26,15 +26,19 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _initialized = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final profile = context.read<AuthProvider>().profile;
-      if (profile != null) {
-        _nameController.text = profile.fullName;
-        _initialized = true;
+
+      if (profile != null && mounted) {
+        setState(() {
+          _nameController.text = profile.fullName;
+          _initialized = true;
+        });
       }
-    }
+    });
   }
 
   @override
@@ -108,6 +112,8 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted) return;
 
     if (success) {
+      await context.read<AuthProvider>().refreshProfile();
+      if (!mounted) return;
       await context.read<PostProvider>().refreshPosts();
       setState(() => _avatarFile = null);
 
@@ -131,8 +137,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final profile = auth.profile;
+    final profile = context.select<AuthProvider, dynamic>(
+      (auth) => auth.profile,
+    );
+
+    final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
+
+    final error = context.select<AuthProvider, String?>((auth) => auth.error);
     final cs = Theme.of(context).colorScheme;
     final isDesktop = MediaQuery.of(context).size.width >= 600;
 
@@ -428,10 +439,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(
-                              onPressed: auth.isBusy
-                                  ? null
-                                  : _handleSaveProfile,
-                              icon: auth.isBusy
+                              onPressed: isBusy ? null : _handleSaveProfile,
+                              icon: isBusy
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
@@ -442,7 +451,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     )
                                   : const Icon(Icons.check_rounded, size: 20),
                               label: Text(
-                                auth.isBusy ? 'Saving...' : 'Save Changes',
+                                isBusy ? 'Saving...' : 'Save Changes',
                               ),
                               style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(

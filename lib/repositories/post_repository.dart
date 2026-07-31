@@ -22,6 +22,7 @@ class PostRepository extends GenericRepository<Post> {
           .select('*, profiles:user_id(full_name, avatar_url)')
           .order('created_at', ascending: false)
           .range(from, to);
+
       return (res as List)
           .map((e) => Post.fromJson(e as Map<String, dynamic>))
           .toList();
