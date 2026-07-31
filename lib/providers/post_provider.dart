@@ -90,6 +90,8 @@ class PostProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      await Future.delayed(const Duration(milliseconds: 500));
+
       await _paginator.reset(
         load: (page, limit) => _service.getAll(page: page, limit: limit),
       );
