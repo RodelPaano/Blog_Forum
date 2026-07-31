@@ -24,47 +24,22 @@ class _ProfilePageState extends State<ProfilePage> {
   final _nameController = TextEditingController();
   final _picker = ImagePicker();
   File? _avatarFile;
-  bool _initialized = false;
-  AuthProvider? _auth;
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _auth = context.read<AuthProvider>();
-      _auth?.addListener(_onAuthChanged);
-      _initNameField();
-    });
+    _nameController.addListener(_onNameChanged);
   }
 
-  /// Fills the name field from the profile exactly once. Never overwrites
-  /// text the user is already typing.
-  void _initNameField() {
-    if (_initialized || !mounted) return;
-
-    final profile = _auth?.profile;
-    if (profile == null || profile.fullName.isEmpty) return;
-
-    if (_nameController.text.isNotEmpty) {
-      _initialized = true;
-      return;
-    }
-
-    _nameController.text = profile.fullName;
-    _initialized = true;
-  }
-
-  void _onAuthChanged() {
-    _initNameField();
-  }
+  void _onNameChanged() {}
 
   @override
-  void dispose() {
-    _auth?.removeListener(_onAuthChanged);
-    _nameController.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final p = context.read<AuthProvider>().profile;
+    if (p != null && _nameController.text != p.fullName) {
+      _nameController.text = p.fullName;
+    }
   }
 
   // ─── Actions ─────────────────────────────────────────────────────────────
@@ -143,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
       final savedName = context.read<AuthProvider>().profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
         _nameController.text = savedName;
-        _initialized = true;
       }
       setState(() => _avatarFile = null);
 
