@@ -95,9 +95,13 @@ class _PostViewScreenState extends State<PostViewScreen> {
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit Post',
               onPressed: () async {
-                await context.push('/post/${post.id}/edit');
+                await context.push(
+                  '/post/${post.id}/edit',
+                ); // ← tanggalin na ang <Post>
+
                 if (!mounted) return;
 
+                // ✅ Palaging re-fetch — hindi na kailangan ng return value
                 await context.read<PostProvider>().getPostById(widget.postId);
               },
             ),
