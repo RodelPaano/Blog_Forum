@@ -34,11 +34,8 @@ class _PostViewScreenState extends State<PostViewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final provider = context.read<PostProvider>();
-
-      if (provider.selectedPost?.id != widget.postId) {
-        provider.getPostById(widget.postId);
-      }
+      // ✅ Tanggalin ang condition — palaging fetch
+      context.read<PostProvider>().getPostById(widget.postId);
       context.read<CommentProvider>().loadFor(widget.postId);
     });
   }
