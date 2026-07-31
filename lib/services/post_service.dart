@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 import '../core/config.dart';
+import '../core/exceptions.dart';
 import '../core/sanitizers.dart';
 import '../core/supabase_client.dart';
 import '../models/post.dart';
@@ -26,7 +27,7 @@ class PostService {
   Future<Post> getPostById(String postId) async {
     final post = await _repo.getById(postId);
 
-    if (post == null) throw Exception('Post not found');
+    if (post == null) throw const DatabaseException('Post not found');
 
     return post;
   }

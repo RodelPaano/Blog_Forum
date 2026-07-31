@@ -46,6 +46,15 @@ class Paginator<T> {
     if (i != -1) _items[i] = item;
   }
 
+  void upsert(T item) {
+    final i = _items.indexWhere((e) => _idOf(e) == _idOf(item));
+    if (i == -1) {
+      _items.insert(0, item);
+    } else {
+      _items[i] = item;
+    }
+  }
+
   void removeWhere(bool Function(T) test) {
     _items.removeWhere(test);
   }

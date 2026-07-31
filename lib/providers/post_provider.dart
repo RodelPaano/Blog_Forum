@@ -145,7 +145,7 @@ class PostProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final updated = await _service.update(
+      await _service.update(
         postId: postId,
         title: title,
         content: content,
@@ -153,7 +153,8 @@ class PostProvider extends ChangeNotifier {
         newImageFiles: newImageFiles,
         imagesToDelete: imagesToDelete,
       );
-      _paginator.replace(updated);
+      final updated = await _service.getPostById(postId);
+      _paginator.upsert(updated);
       _selectedPost = updated;
       return updated;
     } on AppException catch (e) {
