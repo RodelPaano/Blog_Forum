@@ -37,11 +37,7 @@ class NavigationWidget extends StatelessWidget implements PreferredSizeWidget {
               color: cs.primary,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              Icons.article_rounded,
-              color: cs.onPrimary,
-              size: 20,
-            ),
+            child: Icon(Icons.article_rounded, color: cs.onPrimary, size: 20),
           ),
           const SizedBox(width: 12),
           Text(

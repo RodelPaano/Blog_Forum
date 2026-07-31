@@ -9,7 +9,7 @@ import '../../core/config.dart';
 import '../../models/comment.dart';
 import '../../providers/comment_provider.dart';
 import '../../providers/post_provider.dart';
-import '../../utils/app_diallog.dart';
+import '../../utils/app_dialog.dart';
 import '../../utils/image_utils.dart';
 
 /// Reusable action controller for post & comment operations.

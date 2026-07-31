@@ -64,6 +64,9 @@ class CommentProvider extends ChangeNotifier {
     } on AppException catch (e) {
       _error = e.message;
       AppLogger.error('CommentProvider.add', e);
+    } catch (e) {
+      _error = 'Failed to add comment. Please try again.';
+      AppLogger.error('CommentProvider.add', e);
     }
   }
 
@@ -94,6 +97,10 @@ class CommentProvider extends ChangeNotifier {
       return true;
     } on AppException catch (e) {
       _error = e.message;
+      AppLogger.error('CommentProvider.update', e);
+      return false;
+    } catch (e) {
+      _error = 'Failed to update comment. Please try again.';
       AppLogger.error('CommentProvider.update', e);
       return false;
     }

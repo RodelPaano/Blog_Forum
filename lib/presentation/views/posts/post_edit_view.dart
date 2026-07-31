@@ -1,41 +1,131 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/config.dart';
 import '../../../core/validators.dart';
-import '../../widgets/app_button_type.dart';
+import '../../../models/post.dart';
+import '../../../providers/post_provider.dart';
+import '../../../utils/app_dialog.dart';
+import '../../controllers/post_actions_controller.dart';
+import '../../widgets/app_button.dart';
 import '../../widgets/image_picker_widget.dart';
 import '../../widgets/mobile_page.dart';
 
-class PostCreateView extends StatelessWidget {
-  const PostCreateView({
-    super.key,
-    required this.formKey,
-    required this.titleController,
-    required this.contentController,
-    required this.imageFiles,
-    required this.isLoading,
-    required this.onPickImages,
-    required this.onRemoveImage,
-    required this.onSubmit,
-  });
+class PostEditView extends StatefulWidget {
+  const PostEditView({super.key, required this.postId});
 
-  final GlobalKey<FormState> formKey;
-  final TextEditingController titleController;
-  final TextEditingController contentController;
-  final List<File> imageFiles;
-  final bool isLoading;
-  final VoidCallback onPickImages;
-  final ValueChanged<int> onRemoveImage;
-  final VoidCallback onSubmit;
+  final String postId;
+
+  @override
+  State<PostEditView> createState() => _PostEditViewState();
+}
+
+class _PostEditViewState extends State<PostEditView> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _contentController = TextEditingController();
+
+  final List<String> _existingImages = [];
+  final List<File> _newFiles = [];
+  final List<String> _toDelete = [];
+  Post? _original;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPost());
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadPost() async {
+    final provider = context.read<PostProvider>();
+    final post = await provider.fetchPost(widget.postId);
+
+    if (!mounted) return;
+    if (post == null) {
+      if (provider.error != null) {
+        AppDialog.showError(context, provider.error!);
+      }
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _original = post;
+      _titleController.text = post.title;
+      _contentController.text = post.content;
+      _existingImages
+        ..clear()
+        ..addAll(post.images);
+      _newFiles.clear();
+      _toDelete.clear();
+      _loading = false;
+    });
+  }
+
+  Future<void> _pickImages() async {
+    final valid = await PostActionsController.pickImages(
+      context,
+      currentCount: _existingImages.length + _newFiles.length,
+    );
+    if (valid.isNotEmpty) setState(() => _newFiles.addAll(valid));
+  }
+
+  void _removeNewImage(int index) {
+    setState(() => _newFiles.removeAt(index));
+  }
+
+  void _removeExistingImage(int index) {
+    setState(() => _toDelete.add(_existingImages.removeAt(index)));
+  }
+
+  Future<void> _updatePost() async {
+    if (!_formKey.currentState!.validate() || _original == null) return;
+
+    final provider = context.read<PostProvider>();
+    final updated = await provider.updatePost(
+      postId: _original!.id,
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      existingImageUrls: _existingImages,
+      newImageFiles: _newFiles,
+      imagesToDelete: _toDelete,
+    );
+
+    if (!mounted) return;
+
+    if (updated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post updated successfully')),
+      );
+      context.pop();
+    } else {
+      final err = provider.error ?? 'Update failed';
+      AppDialog.showError(context, err);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final cs = Theme.of(context).colorScheme;
+    final isLoading = context.watch<PostProvider>().isLoading;
 
     return MobilePage(
       child: Form(
-        key: formKey,
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -52,7 +142,7 @@ class PostCreateView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
-                    controller: titleController,
+                    controller: _titleController,
                     maxLength: AppConfig.maxTitleLength,
                     decoration: InputDecoration(
                       labelText: 'Title',
@@ -70,7 +160,7 @@ class PostCreateView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: contentController,
+                    controller: _contentController,
                     maxLines: 8,
                     minLines: 4,
                     maxLength: AppConfig.maxContentLength,
@@ -126,7 +216,7 @@ class PostCreateView extends StatelessWidget {
                       ),
                       const Spacer(),
                       TextButton.icon(
-                        onPressed: onPickImages,
+                        onPressed: _pickImages,
                         icon: Icon(
                           Icons.add_photo_alternate_rounded,
                           size: 18,
@@ -141,19 +231,21 @@ class PostCreateView extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ImagePickerWidget(
-                    files: imageFiles,
-                    onPick: onPickImages,
-                    onRemoveNew: onRemoveImage,
+                    files: _newFiles,
+                    existingUrls: _existingImages,
+                    onPick: _pickImages,
+                    onRemoveNew: _removeNewImage,
+                    onRemoveExisting: _removeExistingImage,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
             AppButton(
-              label: 'Publish Post',
+              label: 'Save Changes',
               isLoading: isLoading,
-              onPressed: onSubmit,
-              icon: Icons.send_rounded,
+              onPressed: _updatePost,
+              icon: Icons.save_rounded,
             ),
             const SizedBox(height: 16),
           ],

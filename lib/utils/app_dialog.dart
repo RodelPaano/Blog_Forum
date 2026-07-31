@@ -1,4 +1,4 @@
-import 'package:blog_forum_app/presentation/widgets/app_button_type.dart';
+import 'package:blog_forum_app/presentation/widgets/app_button.dart';
 import 'package:flutter/material.dart'
     show
         AlertDialog,

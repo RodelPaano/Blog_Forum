@@ -16,18 +16,16 @@ class PostDetailView extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 600;
     final isEdited =
         (post.updatedAt.millisecondsSinceEpoch -
-                    post.createdAt.millisecondsSinceEpoch)
-                .abs() >=
-            1000;
+                post.createdAt.millisecondsSinceEpoch)
+            .abs() >=
+        1000;
 
     return Container(
       padding: EdgeInsets.all(isDesktop ? 20 : 16),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,10 +85,7 @@ class PostDetailView extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       AppDate.display(post.createdAt, post.updatedAt),
-                      style: TextStyle(
-                        color: cs.outline,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: cs.outline, fontSize: 12),
                     ),
                   ],
                 ),

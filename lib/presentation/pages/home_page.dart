@@ -3,32 +3,30 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
-import '../view/posts/post_view_list.dart';
+import '../views/posts/post_view_list.dart';
 import '../widgets/navigation_widget.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 800;
-    final loggedIn = context.watch<AuthProvider>().isLoggedIn;
+    final auth = context.watch<AuthProvider>();
+    final loggedIn = auth.isLoggedIn;
     final cs = Theme.of(context).colorScheme;
 
     // Desktop: web-style top navigation bar
     if (isDesktop) {
       return Scaffold(
-        appBar: NavigationWidget(
-          isMobile: false,
-          loggedIn: loggedIn,
-        ),
+        appBar: NavigationWidget(isMobile: false, loggedIn: loggedIn),
         body: PostListView(loggedIn: loggedIn),
       );
     }
@@ -49,11 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: cs.primary,
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(
-                Icons.article_rounded,
-                color: cs.onPrimary,
-                size: 18,
-              ),
+              child: Icon(Icons.article_rounded, color: cs.onPrimary, size: 18),
             ),
             const SizedBox(width: 10),
             Text(

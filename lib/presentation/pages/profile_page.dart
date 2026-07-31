@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:blog_forum_app/providers/post_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,16 +9,16 @@ import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/app_diallog.dart';
+import '../../utils/app_dialog.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _picker = ImagePicker();
@@ -103,7 +104,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
 
     if (success) {
+      await context.read<PostProvider>().refreshPosts();
       setState(() => _avatarFile = null);
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully!')),
       );

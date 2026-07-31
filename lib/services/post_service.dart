@@ -41,10 +41,10 @@ class PostService {
   }) async {
     // Validation
     if (title.trim().isEmpty) {
-      throw ArgumentError('Title must not be empty.');
+      throw const ValidationException('Title must not be empty.');
     }
     if (content.trim().isEmpty) {
-      throw ArgumentError('Content must not be empty.');
+      throw const ValidationException('Content must not be empty.');
     }
 
     // Sanitize
@@ -90,10 +90,10 @@ class PostService {
   }) async {
     // Validation
     if (title.trim().isEmpty) {
-      throw ArgumentError('Title must not be empty.');
+      throw const ValidationException('Title must not be empty.');
     }
     if (content.trim().isEmpty) {
-      throw ArgumentError('Content must not be empty.');
+      throw const ValidationException('Content must not be empty.');
     }
 
     // Sanitize

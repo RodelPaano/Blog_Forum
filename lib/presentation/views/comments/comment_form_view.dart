@@ -45,9 +45,7 @@ class CommentFormView extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,10 +113,7 @@ class CommentFormView extends StatelessWidget {
                       _isEditing
                           ? "Modify your response below"
                           : "Share your thoughts with the community",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: cs.outline,
-                      ),
+                      style: TextStyle(fontSize: 12, color: cs.outline),
                     ),
                   ],
                 ),
@@ -135,7 +130,10 @@ class CommentFormView extends StatelessWidget {
             minLines: isDesktop ? 3 : 2,
             maxLines: 6,
             textInputAction: TextInputAction.newline,
-            style: TextStyle(fontSize: isDesktop ? 15 : 14, color: cs.onSurface),
+            style: TextStyle(
+              fontSize: isDesktop ? 15 : 14,
+              color: cs.onSurface,
+            ),
             decoration: InputDecoration(
               hintText: _isEditing
                   ? "Update your comment..."
@@ -161,10 +159,7 @@ class CommentFormView extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: cs.primary,
-                  width: 1.8,
-                ),
+                borderSide: BorderSide(color: cs.primary, width: 1.8),
               ),
             ),
           ),
@@ -189,10 +184,7 @@ class CommentFormView extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          Divider(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            height: 1,
-          ),
+          Divider(color: cs.outlineVariant.withValues(alpha: 0.3), height: 1),
 
           const SizedBox(height: 14),
 
@@ -225,9 +217,7 @@ class CommentFormView extends StatelessWidget {
                   _isEditing ? Icons.check_rounded : Icons.send_rounded,
                   size: 18,
                 ),
-                label: Text(
-                  _isEditing ? "Update Comment" : "Post Comment",
-                ),
+                label: Text(_isEditing ? "Update Comment" : "Post Comment"),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(0, 42),
                   padding: const EdgeInsets.symmetric(

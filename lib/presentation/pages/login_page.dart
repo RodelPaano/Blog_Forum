@@ -1,43 +1,38 @@
 import 'package:blog_forum_app/presentation/widgets/auth_header_widget.dart';
-import 'package:blog_forum_app/utils/app_diallog.dart';
+import 'package:blog_forum_app/utils/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../widgets/app_button_type.dart';
+import '../widgets/app_button.dart';
 import '../widgets/mobile_page.dart';
+import '../widgets/text_field_widget.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _LoginPageState extends State<LoginPage> {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _name = TextEditingController();
-  bool _obscure = true;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _name.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final ok = await auth.signUp(
-      _email.text.trim(),
-      _password.text,
-      _name.text.trim(),
-    );
+    final ok = await auth.signIn(_email.text.trim(), _password.text);
     if (!mounted) return;
     if (ok) {
       context.go('/');
@@ -49,6 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -72,57 +68,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AuthHeader(
-                title: 'Create account',
-                subtitle: 'Join the community of bloggers',
+                title: 'Welcome back',
+                subtitle: 'Sign in to your account',
               ),
               const SizedBox(height: 32),
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: Validators.name,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
+              TextFieldWidget(
                 controller: _email,
+                labelText: 'Email Address',
+                prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
                 enableSuggestions: false,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
                 validator: Validators.email,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              TextFieldWidget(
                 controller: _password,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
+                labelText: 'Password',
+                prefixIcon: Icons.lock_outline,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
                 validator: Validators.password,
+                onFieldSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 24),
               AppButton(
-                label: 'Create Account',
+                label: 'Sign In',
                 isLoading: auth.isBusy,
                 onPressed: _submit,
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () => context.go('/login'),
-                child: const Text('Already have an account? Sign in'),
+                onPressed: () => context.go('/register'),
+                child: const Text("Don't have an account? Sign up"),
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(

@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:blog_forum_app/core/exceptions.dart' show AuthException;
+import 'package:blog_forum_app/core/exceptions.dart'
+    show AuthException, ValidationException;
 import 'package:image_picker/image_picker.dart';
 
 import '../core/config.dart';
@@ -38,7 +39,9 @@ class CommentService {
       throw const AuthException('User must be logged in to comment');
     }
     if (content.trim().isEmpty && imageFiles.isEmpty) {
-      throw ArgumentError('Comment must have content or at least one image.');
+      throw const ValidationException(
+        'Comment must have content or at least one image.',
+      );
     }
 
     // Sanitize
@@ -87,7 +90,7 @@ class CommentService {
       );
     }
     if (!hasContent && !hasImages) {
-      throw ArgumentError(
+      throw const ValidationException(
         'Updated comment must have content or at least one image.',
       );
     }

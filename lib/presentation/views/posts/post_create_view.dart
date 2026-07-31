@@ -1,45 +1,79 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/config.dart';
 import '../../../core/validators.dart';
-import '../../widgets/app_button_type.dart';
+import '../../../providers/post_provider.dart';
+import '../../../utils/app_dialog.dart';
+import '../../controllers/post_actions_controller.dart';
+import '../../widgets/app_button.dart';
 import '../../widgets/image_picker_widget.dart';
 import '../../widgets/mobile_page.dart';
 
-class PostEditView extends StatelessWidget {
-  const PostEditView({
-    super.key,
-    required this.formKey,
-    required this.titleController,
-    required this.contentController,
-    required this.newFiles,
-    required this.existingImages,
-    required this.isLoading,
-    required this.onPickImages,
-    required this.onRemoveNew,
-    required this.onRemoveExisting,
-    required this.onSubmit,
-  });
+class PostCreateView extends StatefulWidget {
+  const PostCreateView({super.key});
 
-  final GlobalKey<FormState> formKey;
-  final TextEditingController titleController;
-  final TextEditingController contentController;
-  final List<File> newFiles;
-  final List<String> existingImages;
-  final bool isLoading;
-  final VoidCallback onPickImages;
-  final ValueChanged<int> onRemoveNew;
-  final ValueChanged<int> onRemoveExisting;
-  final VoidCallback onSubmit;
+  @override
+  State<PostCreateView> createState() => _PostCreateViewState();
+}
+
+class _PostCreateViewState extends State<PostCreateView> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _contentController = TextEditingController();
+  final List<File> _imageFiles = [];
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final valid = await PostActionsController.pickImages(
+      context,
+      currentCount: _imageFiles.length,
+    );
+    if (valid.isNotEmpty) setState(() => _imageFiles.addAll(valid));
+  }
+
+  void _removeImage(int index) {
+    setState(() => _imageFiles.removeAt(index));
+  }
+
+  Future<void> _submitPost() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final provider = context.read<PostProvider>();
+    final success = await provider.createPost(
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      imageFiles: _imageFiles,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post published successfully!')),
+      );
+      context.go('/');
+    } else if (provider.error != null) {
+      AppDialog.showError(context, provider.error!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isLoading = context.watch<PostProvider>().isLoading;
 
     return MobilePage(
       child: Form(
-        key: formKey,
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -56,7 +90,7 @@ class PostEditView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
-                    controller: titleController,
+                    controller: _titleController,
                     maxLength: AppConfig.maxTitleLength,
                     decoration: InputDecoration(
                       labelText: 'Title',
@@ -74,7 +108,7 @@ class PostEditView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: contentController,
+                    controller: _contentController,
                     maxLines: 8,
                     minLines: 4,
                     maxLength: AppConfig.maxContentLength,
@@ -130,7 +164,7 @@ class PostEditView extends StatelessWidget {
                       ),
                       const Spacer(),
                       TextButton.icon(
-                        onPressed: onPickImages,
+                        onPressed: _pickImages,
                         icon: Icon(
                           Icons.add_photo_alternate_rounded,
                           size: 18,
@@ -145,21 +179,19 @@ class PostEditView extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ImagePickerWidget(
-                    files: newFiles,
-                    existingUrls: existingImages,
-                    onPick: onPickImages,
-                    onRemoveNew: onRemoveNew,
-                    onRemoveExisting: onRemoveExisting,
+                    files: _imageFiles,
+                    onPick: _pickImages,
+                    onRemoveNew: _removeImage,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
             AppButton(
-              label: 'Save Changes',
+              label: 'Publish Post',
               isLoading: isLoading,
-              onPressed: onSubmit,
-              icon: Icons.save_rounded,
+              onPressed: _submitPost,
+              icon: Icons.send_rounded,
             ),
             const SizedBox(height: 16),
           ],

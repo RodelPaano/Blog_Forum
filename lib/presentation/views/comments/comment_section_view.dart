@@ -1,5 +1,5 @@
 import 'package:blog_forum_app/models/comment.dart' show Comment;
-import 'package:blog_forum_app/presentation/view/comments/comment_card.dart';
+import 'package:blog_forum_app/presentation/views/comments/comment_card.dart';
 import 'package:blog_forum_app/providers/comment_provider.dart'
     show CommentProvider;
 import 'package:flutter/cupertino.dart';

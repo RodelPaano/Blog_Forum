@@ -125,6 +125,10 @@ class PostProvider extends ChangeNotifier {
       _error = e.message;
       AppLogger.error('PostProvider.createPost', e);
       return false;
+    } catch (e) {
+      _error = 'Failed to create post. Please try again.';
+      AppLogger.error('PostProvider.createPost', e);
+      return false;
     } finally {
       _loading = false;
       notifyListeners();
@@ -158,6 +162,10 @@ class PostProvider extends ChangeNotifier {
       return true;
     } on AppException catch (e) {
       _error = e.message;
+      AppLogger.error('PostProvider.updatePost', e);
+      return false;
+    } catch (e) {
+      _error = 'Failed to update post. Please try again.';
       AppLogger.error('PostProvider.updatePost', e);
       return false;
     } finally {

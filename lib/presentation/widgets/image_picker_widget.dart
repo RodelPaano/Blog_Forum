@@ -47,7 +47,7 @@ class ImagePickerWidget extends StatelessWidget {
                 ),
               for (var i = 0; i < files.length; i++)
                 _Thumb(
-                  imageProvider: kIsWeb 
+                  imageProvider: kIsWeb
                       ? NetworkImage(files[i].path) as ImageProvider
                       : FileImage(files[i]),
                   onRemove: () => onRemoveNew(i),

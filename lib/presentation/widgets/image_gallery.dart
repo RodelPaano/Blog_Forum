@@ -53,36 +53,36 @@ class ImageGrid extends StatelessWidget {
     }
 
     return GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
 
-        shrinkWrap: true,
+      shrinkWrap: true,
 
-        clipBehavior: Clip.none,
+      clipBehavior: Clip.none,
 
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
 
-          mainAxisSpacing: 6,
+        mainAxisSpacing: 6,
 
-          crossAxisSpacing: 6,
-        ),
+        crossAxisSpacing: 6,
+      ),
 
-        itemCount: urls.length,
+      itemCount: urls.length,
 
-        itemBuilder: (context, index) {
-          return AppNetworkImage(
-            url: urls[index],
+      itemBuilder: (context, index) {
+        return AppNetworkImage(
+          url: urls[index],
 
-            width: double.infinity,
+          width: double.infinity,
 
-            height: double.infinity,
+          height: double.infinity,
 
-            borderRadius: 8,
+          borderRadius: 8,
 
-            fit: BoxFit.cover,
-          );
-        },
-      );
+          fit: BoxFit.cover,
+        );
+      },
+    );
   }
 }
 

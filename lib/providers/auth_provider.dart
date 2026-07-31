@@ -28,8 +28,6 @@ class AuthProvider extends ChangeNotifier {
   bool get isBusy => _busy;
   String? get error => _error;
 
-  get errorMessage => null;
-
   void initialize() {
     _sub = _authService.authStateChanges.listen((event) async {
       try {

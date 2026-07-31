@@ -117,19 +117,15 @@ class AuthService implements IAuthService {
       }
 
       var profile = await _profileRepo.getById(user.id);
-      if (profile == null &&
-          profile?.email != cleanEmail &&
-          profile?.fullName != 'User') {
-        profile = await _profileRepo.create(
-          UserProfile(
-            id: user.id,
-            email: cleanEmail,
-            fullName: 'User',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-      }
+      profile ??= await _profileRepo.create(
+        UserProfile(
+          id: user.id,
+          email: cleanEmail,
+          fullName: 'User',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
 
       return profile;
     } on AuthException {
