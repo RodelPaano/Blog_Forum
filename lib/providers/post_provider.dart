@@ -6,6 +6,7 @@ import '../core/config.dart';
 import '../core/exceptions.dart';
 import '../core/logger.dart';
 import '../models/post.dart';
+import '../models/user_profile.dart';
 import '../services/post_service.dart';
 import '../utils/pagination.dart';
 
@@ -199,6 +200,26 @@ class PostProvider extends ChangeNotifier {
   void refreshSelectedPost(Post post) {
     _selectedPost = post;
     _paginator.upsert(post);
+    notifyListeners();
+  }
+
+  /// Reactively updates the author info of the current user's posts in the
+  /// loaded list so the post feed reflects profile changes immediately.
+  void applyProfileToMyPosts(UserProfile profile) {
+    _paginator.updateWhere(
+      (p) => p.userId == profile.id,
+      (p) => Post(
+        id: p.id,
+        userId: p.userId,
+        title: p.title,
+        content: p.content,
+        images: p.images,
+        authorName: profile.fullName,
+        authorAvatar: profile.avatarUrl,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      ),
+    );
     notifyListeners();
   }
 

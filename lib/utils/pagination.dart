@@ -64,6 +64,14 @@ class Paginator<T> {
     _items.removeWhere(test);
   }
 
+  void updateWhere(bool Function(T) test, T Function(T) transform) {
+    for (var i = 0; i < _items.length; i++) {
+      if (test(_items[i])) {
+        _items[i] = transform(_items[i]);
+      }
+    }
+  }
+
   String _idOf(T e) {
     try {
       final dyn = e as dynamic;

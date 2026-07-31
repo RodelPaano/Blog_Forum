@@ -25,20 +25,18 @@ class _ProfilePageState extends State<ProfilePage> {
   final _picker = ImagePicker();
   File? _avatarFile;
   bool _initialized = false;
+  AuthProvider? _auth;
 
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _auth = context.read<AuthProvider>();
+      _auth?.addListener(_onAuthChanged);
       _initNameField();
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _initNameField();
   }
 
   /// Fills the name field from the profile exactly once. Never overwrites
@@ -46,7 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _initNameField() {
     if (_initialized || !mounted) return;
 
-    final profile = context.read<AuthProvider>().profile;
+    final profile = _auth?.profile;
     if (profile == null || profile.fullName.isEmpty) return;
 
     if (_nameController.text.isNotEmpty) {
@@ -58,8 +56,13 @@ class _ProfilePageState extends State<ProfilePage> {
     _initialized = true;
   }
 
+  void _onAuthChanged() {
+    _initNameField();
+  }
+
   @override
   void dispose() {
+    _auth?.removeListener(_onAuthChanged);
     _nameController.dispose();
     super.dispose();
   }
@@ -131,7 +134,12 @@ class _ProfilePageState extends State<ProfilePage> {
     if (success) {
       await context.read<AuthProvider>().refreshProfile();
       if (!mounted) return;
+      final profile = context.read<AuthProvider>().profile;
+      if (profile != null) {
+        context.read<PostProvider>().applyProfileToMyPosts(profile);
+      }
       await context.read<PostProvider>().refreshPosts();
+      if (!mounted) return;
       final savedName = context.read<AuthProvider>().profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
         _nameController.text = savedName;
@@ -165,7 +173,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
 
-    final error = context.select<AuthProvider, String?>((auth) => auth.error);
     final cs = Theme.of(context).colorScheme;
     final isDesktop = MediaQuery.of(context).size.width >= 600;
 
