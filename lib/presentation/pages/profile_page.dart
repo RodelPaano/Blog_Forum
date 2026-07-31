@@ -23,13 +23,17 @@ class _ProfilePageState extends State<ProfilePage> {
   final _nameController = TextEditingController();
   final _picker = ImagePicker();
   File? _avatarFile;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final profile = context.read<AuthProvider>().profile;
-    if (profile != null && _nameController.text != profile.fullName) {
-      _nameController.text = profile.fullName;
+    if (!_initialized) {
+      final profile = context.read<AuthProvider>().profile;
+      if (profile != null) {
+        _nameController.text = profile.fullName;
+        _initialized = true;
+      }
     }
   }
 

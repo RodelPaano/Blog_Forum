@@ -18,6 +18,7 @@ class Paginator<T> {
     _items.clear();
     _page = -1;
     _hasMore = true;
+    _loading = false;
     await loadMore(load: load);
   }
 
