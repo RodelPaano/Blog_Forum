@@ -102,10 +102,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post updated successfully')),
       );
-      // ✅ I-update ang provider DITO — bago pa man mag-pop
-      Navigator.pop(context, true);
-
-      context.pop(); // ← wala nang return value, hindi na kailangan
+      context.pop();
     } else {
       final err = provider.error ?? 'Update failed';
       AppDialog.showError(context, err);

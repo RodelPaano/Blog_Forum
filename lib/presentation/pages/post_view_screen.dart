@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blog_forum_app/models/post.dart';
 import 'package:blog_forum_app/utils/app_diallog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -19,8 +20,9 @@ import '../widgets/empty_state.dart';
 import '../widgets/login_required_widget.dart';
 
 class PostViewScreen extends StatefulWidget {
-  const PostViewScreen({super.key, required this.postId});
+  const PostViewScreen({super.key, required this.postId, this.editngPost});
   final String postId;
+  final Post? editngPost;
 
   @override
   State<PostViewScreen> createState() => _PostViewScreenState();
@@ -91,6 +93,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit Post',
               onPressed: () async {
+                final provider = context.read<PostProvider>();
                 await context.push(
                   '/post/${post.id}/edit',
                 ); // ← tanggalin na ang <Post>
@@ -98,7 +101,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 if (!mounted) return;
 
                 // ✅ Palaging re-fetch — hindi na kailangan ng return value
-                await context.read<PostProvider>().getPostById(widget.postId);
+                await provider.getPostById(widget.postId);
               },
             ),
             IconButton(
