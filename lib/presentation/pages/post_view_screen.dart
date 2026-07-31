@@ -95,15 +95,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit Post',
               onPressed: () async {
-                final updated = await context.push<Post>(
-                  '/post/${post.id}/edit',
-                );
+                await context.push('/post/${post.id}/edit');
                 if (!mounted) return;
-                if (updated != null) {
-                  final provider = context.read<PostProvider>();
-                  provider.refreshSelectedPost(updated);
-                  await provider.getPostById(updated.id);
-                }
+
+                await context.read<PostProvider>().getPostById(widget.postId);
               },
             ),
             IconButton(

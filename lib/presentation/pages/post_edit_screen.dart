@@ -99,10 +99,12 @@ class _PostEditScreenState extends State<PostEditScreen> {
     if (!mounted) return;
 
     if (updated != null) {
+      provider.refreshSelectedPost(updated);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post updated successfully')),
       );
-      context.pop(updated);
+      context.pop();
     } else {
       final err = provider.error ?? 'Update failed';
       AppDialog.showError(context, err);
