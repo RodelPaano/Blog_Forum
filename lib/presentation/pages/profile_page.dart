@@ -345,6 +345,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             enableSuggestions: false,
                             autofillHints: null,
                             validator: Validators.name,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                           ),
                           const SizedBox(height: 16),
 
