@@ -26,12 +26,12 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CommentProvider()),
       ],
       child: MaterialApp.router(
+        routerConfig: AppRouter.router,
         title: 'Blog Forum',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
-        routerConfig: AppRouter.router,
       ),
     );
   }
