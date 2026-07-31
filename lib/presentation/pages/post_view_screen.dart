@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/supabase_client.dart';
 import '../../models/comment.dart';
-import '../../models/post.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/comment_provider.dart';
 import '../../providers/post_provider.dart';

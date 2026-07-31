@@ -133,7 +133,7 @@ class PostProvider extends ChangeNotifier {
 
   // ─── Update ────────────────────────────────────────────────
 
-  Future<Post?> updatePost({
+  Future<bool> updatePost({
     required String postId,
     required String title,
     required String content,
@@ -155,11 +155,11 @@ class PostProvider extends ChangeNotifier {
       );
       _paginator.upsert(updated);
       _selectedPost = updated;
-      return updated;
+      return true;
     } on AppException catch (e) {
       _error = e.message;
       AppLogger.error('PostProvider.updatePost', e);
-      return null;
+      return false;
     } finally {
       _loading = false;
       notifyListeners();
