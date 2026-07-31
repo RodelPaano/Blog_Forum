@@ -7,6 +7,7 @@ class Paginator<T> {
   int _page = -1;
   bool _hasMore = true;
   bool _loading = false;
+  int _generation = 0;
 
   List<T> get items => List.unmodifiable(_items);
   bool get hasMore => _hasMore;
@@ -15,6 +16,7 @@ class Paginator<T> {
   Future<void> reset({
     required Future<List<T>> Function(int page, int limit) load,
   }) async {
+    _generation++;
     _items.clear();
     _page = -1;
     _hasMore = true;
@@ -26,15 +28,17 @@ class Paginator<T> {
     required Future<List<T>> Function(int page, int limit) load,
   }) async {
     if (_loading || !_hasMore) return;
+    final generation = _generation;
     _loading = true;
     try {
       final next = _page + 1;
       final batch = await load(next, pageSize);
+      if (generation != _generation) return;
       if (batch.length < pageSize) _hasMore = false;
       _items.addAll(batch);
       _page = next;
     } finally {
-      _loading = false;
+      if (generation == _generation) _loading = false;
     }
   }
 

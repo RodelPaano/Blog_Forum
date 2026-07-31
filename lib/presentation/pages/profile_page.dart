@@ -30,15 +30,31 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profile = context.read<AuthProvider>().profile;
-
-      if (profile != null && mounted) {
-        setState(() {
-          _nameController.text = profile.fullName;
-          _initialized = true;
-        });
-      }
+      _initNameField();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initNameField();
+  }
+
+  /// Fills the name field from the profile exactly once. Never overwrites
+  /// text the user is already typing.
+  void _initNameField() {
+    if (_initialized || !mounted) return;
+
+    final profile = context.read<AuthProvider>().profile;
+    if (profile == null || profile.fullName.isEmpty) return;
+
+    if (_nameController.text.isNotEmpty) {
+      _initialized = true;
+      return;
+    }
+
+    _nameController.text = profile.fullName;
+    _initialized = true;
   }
 
   @override
@@ -115,6 +131,11 @@ class _ProfilePageState extends State<ProfilePage> {
       await context.read<AuthProvider>().refreshProfile();
       if (!mounted) return;
       await context.read<PostProvider>().refreshPosts();
+      final savedName = context.read<AuthProvider>().profile?.fullName;
+      if (savedName != null && savedName.isNotEmpty) {
+        _nameController.text = savedName;
+        _initialized = true;
+      }
       setState(() => _avatarFile = null);
 
       if (!mounted) return;
