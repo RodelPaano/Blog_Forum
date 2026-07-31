@@ -86,7 +86,6 @@ class PostProvider extends ChangeNotifier {
   }
 
   Future<void> refreshPosts() async {
-    if (_loading) return;
     _loading = true;
     _error = null;
     notifyListeners();
