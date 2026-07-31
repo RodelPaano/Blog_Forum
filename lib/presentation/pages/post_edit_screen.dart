@@ -83,7 +83,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
     setState(() => _toDelete.add(_existingImages.removeAt(index)));
   }
 
-  Future<void> _submit() async {
+  Future<void> _updatePost() async {
     if (!_formKey.currentState!.validate() || _original == null) return;
 
     final provider = context.read<PostProvider>();
@@ -99,12 +99,11 @@ class _PostEditScreenState extends State<PostEditScreen> {
     if (!mounted) return;
 
     if (updated) {
-      // ✅ I-update ang provider DITO — bago pa man mag-pop
-      Navigator.of(context).pop();
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post updated successfully')),
       );
+      // ✅ I-update ang provider DITO — bago pa man mag-pop
+      Navigator.pop(context, true);
 
       context.pop(); // ← wala nang return value, hindi na kailangan
     } else {
@@ -139,7 +138,7 @@ class _PostEditScreenState extends State<PostEditScreen> {
         onPickImages: _pickImages,
         onRemoveNew: _removeNewImage,
         onRemoveExisting: _removeExistingImage,
-        onSubmit: _submit,
+        onSubmit: _updatePost,
       ),
     );
   }
