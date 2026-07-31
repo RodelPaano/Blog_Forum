@@ -206,8 +206,23 @@ class PostProvider extends ChangeNotifier {
   /// Reactively updates the author info of the current user's posts in the
   /// loaded list so the post feed reflects profile changes immediately.
   void applyProfileToMyPosts(UserProfile profile) {
+    final targetId = profile.id.trim().toLowerCase();
+    if (_selectedPost != null &&
+        _selectedPost!.userId.trim().toLowerCase() == targetId) {
+      _selectedPost = Post(
+        id: _selectedPost!.id,
+        userId: _selectedPost!.userId,
+        title: _selectedPost!.title,
+        content: _selectedPost!.content,
+        images: _selectedPost!.images,
+        authorName: profile.fullName,
+        authorAvatar: profile.avatarUrl,
+        createdAt: _selectedPost!.createdAt,
+        updatedAt: _selectedPost!.updatedAt,
+      );
+    }
     _paginator.updateWhere(
-      (p) => p.userId == profile.id,
+      (p) => p.userId.trim().toLowerCase() == targetId,
       (p) => Post(
         id: p.id,
         userId: p.userId,

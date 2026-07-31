@@ -84,6 +84,10 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted) return;
 
     if (removed) {
+      final profile = authProvider.profile;
+      if (profile != null) {
+        context.read<PostProvider>().applyProfileToMyPosts(profile);
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Profile photo removed')));
@@ -104,13 +108,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted) return;
 
     if (success) {
-      await context.read<AuthProvider>().refreshProfile();
-      if (!mounted) return;
-      final profile = context.read<AuthProvider>().profile;
+      final profile = authProvider.profile;
       if (profile != null) {
         context.read<PostProvider>().applyProfileToMyPosts(profile);
       }
-      final savedName = context.read<AuthProvider>().profile?.fullName;
+      final savedName = authProvider.profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
         _nameController.text = savedName;
       }
