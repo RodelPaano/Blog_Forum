@@ -43,9 +43,8 @@ class _PostEditScreenState extends State<PostEditScreen> {
 
   Future<void> _loadPost() async {
     final provider = context.read<PostProvider>();
-    Post? post = (provider.selectedPost?.id == widget.postId)
-        ? provider.selectedPost
-        : await provider.fetchPost(widget.postId);
+    final post = await provider.fetchPost(widget.postId);
+
     if (!mounted) return;
     if (post == null) {
       if (provider.error != null) {
@@ -59,7 +58,11 @@ class _PostEditScreenState extends State<PostEditScreen> {
       _original = post;
       _titleController.text = post.title;
       _contentController.text = post.content;
-      _existingImages.addAll(post.images);
+      _existingImages
+        ..clear()
+        ..addAll(post.images);
+      _newFiles.clear();
+      _toDelete.clear();
       _loading = false;
     });
   }
