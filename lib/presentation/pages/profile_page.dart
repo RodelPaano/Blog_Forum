@@ -28,18 +28,15 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _nameController.addListener(_onNameChanged);
-  }
 
-  void _onNameChanged() {}
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final p = context.read<AuthProvider>().profile;
-    if (p != null && _nameController.text != p.fullName) {
-      _nameController.text = p.fullName;
-    }
+      final profile = context.read<AuthProvider>().profile;
+      if (profile != null) {
+        _nameController.text = profile.fullName;
+      }
+    });
   }
 
   // ─── Actions ─────────────────────────────────────────────────────────────
@@ -113,8 +110,6 @@ class _ProfilePageState extends State<ProfilePage> {
       if (profile != null) {
         context.read<PostProvider>().applyProfileToMyPosts(profile);
       }
-      await context.read<PostProvider>().refreshPosts();
-      if (!mounted) return;
       final savedName = context.read<AuthProvider>().profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
         _nameController.text = savedName;

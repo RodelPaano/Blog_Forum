@@ -91,7 +91,7 @@ class _PostListViewState extends State<PostListView> {
                 key: ValueKey(post.id),
                 padding: const EdgeInsets.only(bottom: 14),
                 child: PostCard(
-                  key: ValueKey('${post.id}-${post.authorAvatar}'),
+                  key: ValueKey('${post.id}-${post.authorAvatar}-${post.authorName}'),
                   post: post,
                 ),
               ),
