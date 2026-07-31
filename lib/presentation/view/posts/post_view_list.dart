@@ -54,7 +54,7 @@ class _PostListViewState extends State<PostListView> {
     final provider = context.watch<PostProvider>();
 
     return RefreshIndicator(
-      onRefresh: provider.loadMore,
+      onRefresh: provider.refreshPosts,
       child: ListView(
         controller: _scroll,
         padding: EdgeInsets.symmetric(
@@ -67,7 +67,10 @@ class _PostListViewState extends State<PostListView> {
           const SizedBox(height: 24),
 
           if (provider.error != null && provider.posts.isEmpty)
-            ErrorBanner(message: provider.error!, onRetry: provider.loadMore)
+            ErrorBanner(
+              message: provider.error!,
+              onRetry: provider.refreshPosts,
+            )
           else if (provider.isLoading && provider.posts.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 100),

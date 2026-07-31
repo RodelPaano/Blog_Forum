@@ -85,6 +85,24 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshPosts() async {
+    if (_loading) return;
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _paginator.reset(
+        load: (page, limit) => _service.getAll(page: page, limit: limit),
+      );
+    } on AppException catch (e) {
+      _error = e.message;
+      AppLogger.error('PostProvider.refreshPosts', e);
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
   // ─── Create ────────────────────────────────────────────────
 
   Future<bool> createPost({
