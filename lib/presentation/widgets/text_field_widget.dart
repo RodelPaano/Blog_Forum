@@ -12,6 +12,8 @@ class TextFieldWidget extends StatefulWidget {
     this.obscureText = false,
     this.autocorrect = true,
     this.enableSuggestions = true,
+    this.textCapitalization = TextCapitalization.none,
+    this.autofillHints,
     this.onFieldSubmitted,
   });
 
@@ -24,6 +26,8 @@ class TextFieldWidget extends StatefulWidget {
   final bool obscureText;
   final bool autocorrect;
   final bool enableSuggestions;
+  final TextCapitalization textCapitalization;
+  final Iterable<String>? autofillHints;
   final void Function(String)? onFieldSubmitted;
 
   @override
@@ -48,6 +52,8 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
       textInputAction: widget.textInputAction,
       autocorrect: widget.autocorrect,
       enableSuggestions: widget.enableSuggestions,
+      textCapitalization: widget.textCapitalization,
+      autofillHints: widget.autofillHints,
       validator: widget.validator,
       onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(

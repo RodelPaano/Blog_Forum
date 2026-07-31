@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:blog_forum_app/presentation/widgets/text_field_widget.dart';
 import 'package:blog_forum_app/providers/post_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -359,44 +360,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 20),
 
                           /// Full Name field
-                          TextFormField(
+                          TextFieldWidget(
                             controller: _nameController,
+                            labelText: 'Full Name',
+                            prefixIcon: Icons.person_outlined,
                             textCapitalization: TextCapitalization.words,
-                            style: TextStyle(fontSize: 15, color: cs.onSurface),
-                            decoration: InputDecoration(
-                              labelText: 'Full Name',
-                              prefixIcon: const Icon(Icons.person_outline),
-                              filled: true,
-                              fillColor: cs.surfaceContainerHigh.withValues(
-                                alpha: 0.4,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide(
-                                  color: cs.outlineVariant.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide(
-                                  color: cs.outlineVariant.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide(
-                                  color: cs.primary,
-                                  width: 1.8,
-                                ),
-                              ),
-                            ),
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            autofillHints: null,
                             validator: Validators.name,
                           ),
-
                           const SizedBox(height: 16),
 
                           /// Email (read-only)
