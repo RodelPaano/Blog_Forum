@@ -99,8 +99,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   '/post/${post.id}/edit',
                 );
                 if (!mounted) return;
-                if (updated != null && mounted) {
-                  context.read<PostProvider>().refreshSelectedPost(updated);
+                if (updated != null) {
+                  final provider = context.read<PostProvider>();
+                  provider.refreshSelectedPost(updated);
+                  await provider.getPostById(updated.id);
                 }
               },
             ),
