@@ -21,39 +21,41 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  late TextEditingController
+  _nameController; // ✅ FIX: use `late`, init sa initState
   final _picker = ImagePicker();
   File? _avatarFile;
 
-  // ✅ FIX 1: Dirty flag — tracks if user has started typing
+  // ✅ FIX: Flag to track if a programmatic text set is happening
+  // So the listener dili mag-mark dirty on our own programmatic sets
+  bool _programmaticSet = false;
   bool _isNameDirty = false;
 
   @override
   void initState() {
     super.initState();
 
-    // ✅ FIX 2: Track when user starts editing
-    _nameController.addListener(() {
-      if (!_isNameDirty && _nameController.text.isNotEmpty) {
-        _isNameDirty = true;
-      }
-    });
+    final profile = context.read<AuthProvider>().profile;
+    _nameController = TextEditingController(text: profile?.fullName ?? '');
 
-    // ✅ FIX 3: Only set controller text if user hasn't typed yet
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final profile = context.read<AuthProvider>().profile;
-      if (profile != null && !_isNameDirty) {
-        _nameController.text = profile.fullName;
+    _nameController.addListener(() {
+      if (!_programmaticSet && !_isNameDirty) {
+        _isNameDirty = true;
       }
     });
   }
 
   @override
   void dispose() {
-    // ✅ FIX 4: Always dispose controller
     _nameController.dispose();
     super.dispose();
+  }
+
+  // ─── Helper: set controller text without marking dirty ───────────────────
+  void _setName(String value) {
+    _programmaticSet = true;
+    _nameController.text = value;
+    _programmaticSet = false;
   }
 
   // ─── Actions ─────────────────────────────────────────────────────────────
@@ -132,9 +134,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
       final savedName = authProvider.profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
-        // ✅ FIX 5: Reset dirty flag after successful save, then update text
         _isNameDirty = false;
-        _nameController.text = savedName;
+        _setName(savedName);
       }
 
       setState(() => _avatarFile = null);
@@ -159,9 +160,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final profile = authProvider.profile;
-    final isBusy = authProvider.isBusy;
+    final profile = context.select<AuthProvider, dynamic>(
+      (auth) => auth.profile,
+    );
+    final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
 
     final cs = Theme.of(context).colorScheme;
     final isDesktop = MediaQuery.of(context).size.width >= 600;
@@ -267,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           const SizedBox(height: 16),
 
-                          /// Name
+                          /// Name & Email display
                           if (profile != null) ...[
                             Text(
                               profile.fullName,
@@ -364,12 +366,13 @@ class _ProfilePageState extends State<ProfilePage> {
                             textCapitalization: TextCapitalization.words,
                             autocorrect: false,
                             enableSuggestions: false,
-                            autofillHints: null,
+                            autofillHints: const [],
                             validator: Validators.name,
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
                           ),
+
                           const SizedBox(height: 16),
 
                           /// Email (read-only)
