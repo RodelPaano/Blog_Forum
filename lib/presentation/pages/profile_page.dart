@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:blog_forum_app/models/user_profile.dart';
 import 'package:blog_forum_app/presentation/widgets/text_field_widget.dart';
 import 'package:blog_forum_app/providers/post_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -35,9 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    print(
-      '🔴 ProfileScreen initState — name: ${context.read<AuthProvider>().profile?.fullName}',
-    );
+
     // ✅ OLD LOGIC: init controller here, NOT in didChangeDependencies
     final profile = context.read<AuthProvider>().profile;
     _nameController = TextEditingController(text: profile?.fullName ?? '');
@@ -51,7 +48,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    print('🔴 ProfileScreen dispose called');
     _nameController.dispose();
     super.dispose();
   }
@@ -166,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.select<AuthProvider, UserProfile?>(
+    final profile = context.select<AuthProvider, dynamic>(
       (auth) => auth.profile,
     );
     final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
