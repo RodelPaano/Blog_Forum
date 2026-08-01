@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 
 import 'package:blog_forum_app/core/logger.dart';
@@ -30,6 +31,17 @@ class AuthProvider extends ChangeNotifier {
 
   void initialize() {
     _sub = _authService.authStateChanges.listen((event) async {
+      // ✅ Only handle actual sign-in/sign-out — ignore token refreshes
+      final relevantEvents = {
+        AuthChangeEvent.signedIn,
+        AuthChangeEvent.signedOut,
+        AuthChangeEvent.userUpdated,
+        AuthChangeEvent.passwordRecovery,
+      };
+
+      if (!relevantEvents.contains(event.event))
+        return; // ← ignore TOKEN_REFRESHED
+
       try {
         final session = event.session;
         if (session != null) {
@@ -39,7 +51,6 @@ class AuthProvider extends ChangeNotifier {
           _profile = null;
           _status = AuthStatus.unauthenticated;
         }
-
         _error = null;
       } catch (e) {
         AppLogger.error('Error on auth state change', e);
