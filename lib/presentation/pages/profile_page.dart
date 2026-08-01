@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:blog_forum_app/models/user_profile.dart';
 import 'package:blog_forum_app/presentation/widgets/text_field_widget.dart';
 import 'package:blog_forum_app/providers/post_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -162,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.select<AuthProvider, dynamic>(
+    final profile = context.select<AuthProvider, UserProfile?>(
       (auth) => auth.profile,
     );
     final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);

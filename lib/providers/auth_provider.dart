@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:blog_forum_app/core/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/exceptions.dart';
 import '../core/supabase_client.dart';
@@ -30,6 +31,7 @@ class AuthProvider extends ChangeNotifier {
 
   void initialize() {
     _sub = _authService.authStateChanges.listen((event) async {
+      if (event.event == AuthChangeEvent.tokenRefreshed) return;
       try {
         final session = event.session;
         if (session != null) {
