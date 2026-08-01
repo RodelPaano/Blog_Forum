@@ -12,22 +12,22 @@ import '../../core/validators.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_dialog.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController
-  _nameController; // ✅ FIX: use `late`, init sa initState
+
+  // ✅ OLD LOGIC: late + initState init (fixes the mobile reset bug)
+  late TextEditingController _nameController;
   final _picker = ImagePicker();
   File? _avatarFile;
 
-  // ✅ FIX: Flag to track if a programmatic text set is happening
-  // So the listener dili mag-mark dirty on our own programmatic sets
+  // ✅ OLD LOGIC: dirty + programmatic flags to prevent auto-reset
   bool _programmaticSet = false;
   bool _isNameDirty = false;
 
@@ -35,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
 
+    // ✅ OLD LOGIC: init controller here, NOT in didChangeDependencies
     final profile = context.read<AuthProvider>().profile;
     _nameController = TextEditingController(text: profile?.fullName ?? '');
 
@@ -51,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // ─── Helper: set controller text without marking dirty ───────────────────
+  // ✅ OLD LOGIC: programmatic text set without triggering dirty flag
   void _setName(String value) {
     _programmaticSet = true;
     _nameController.text = value;
@@ -132,6 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
         context.read<PostProvider>().applyProfileToMyPosts(profile);
       }
 
+      // ✅ OLD LOGIC: reset dirty flag + sync controller after successful save
       final savedName = authProvider.profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
         _isNameDirty = false;
