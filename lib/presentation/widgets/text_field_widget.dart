@@ -56,6 +56,12 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
       autofillHints: widget.autofillHints,
       validator: widget.validator,
       onFieldSubmitted: widget.onFieldSubmitted,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
+      onEditingComplete: () {
+        FocusScope.of(context).unfocus();
+      },
       decoration: InputDecoration(
         labelText: widget.labelText,
         prefixIcon: Icon(widget.prefixIcon),

@@ -28,7 +28,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-
+    // _nameController.addListener(() {
+    //   debugPrint("Typing: ${_nameController.text}");
+    // });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -141,6 +143,10 @@ class _ProfilePageState extends State<ProfilePage> {
     final profile = context.select<AuthProvider, dynamic>(
       (auth) => auth.profile,
     );
+
+    // debugPrint(
+    //   "BUILD -> profile='${profile?.fullName}', controller='${_nameController.text}'",
+    // );
 
     final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
 
@@ -348,7 +354,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             autofillHints: null,
                             validator: Validators.name,
                             textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                            onFieldSubmitted: (_) =>
+                                FocusScope.of(context).unfocus(),
                           ),
                           const SizedBox(height: 16),
 
