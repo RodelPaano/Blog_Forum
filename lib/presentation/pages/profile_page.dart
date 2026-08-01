@@ -25,20 +25,35 @@ class _ProfilePageState extends State<ProfilePage> {
   final _picker = ImagePicker();
   File? _avatarFile;
 
+  // ✅ FIX 1: Dirty flag — tracks if user has started typing
+  bool _isNameDirty = false;
+
   @override
   void initState() {
     super.initState();
-    // _nameController.addListener(() {
-    //   debugPrint("Typing: ${_nameController.text}");
-    // });
+
+    // ✅ FIX 2: Track when user starts editing
+    _nameController.addListener(() {
+      if (!_isNameDirty && _nameController.text.isNotEmpty) {
+        _isNameDirty = true;
+      }
+    });
+
+    // ✅ FIX 3: Only set controller text if user hasn't typed yet
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
       final profile = context.read<AuthProvider>().profile;
-      if (profile != null) {
+      if (profile != null && !_isNameDirty) {
         _nameController.text = profile.fullName;
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // ✅ FIX 4: Always dispose controller
+    _nameController.dispose();
+    super.dispose();
   }
 
   // ─── Actions ─────────────────────────────────────────────────────────────
@@ -114,10 +129,14 @@ class _ProfilePageState extends State<ProfilePage> {
       if (profile != null) {
         context.read<PostProvider>().applyProfileToMyPosts(profile);
       }
+
       final savedName = authProvider.profile?.fullName;
       if (savedName != null && savedName.isNotEmpty) {
+        // ✅ FIX 5: Reset dirty flag after successful save, then update text
+        _isNameDirty = false;
         _nameController.text = savedName;
       }
+
       setState(() => _avatarFile = null);
 
       if (!mounted) return;
@@ -140,15 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.select<AuthProvider, dynamic>(
-      (auth) => auth.profile,
-    );
-
-    // debugPrint(
-    //   "BUILD -> profile='${profile?.fullName}', controller='${_nameController.text}'",
-    // );
-
-    final isBusy = context.select<AuthProvider, bool>((auth) => auth.isBusy);
+    final authProvider = context.watch<AuthProvider>();
+    final profile = authProvider.profile;
+    final isBusy = authProvider.isBusy;
 
     final cs = Theme.of(context).colorScheme;
     final isDesktop = MediaQuery.of(context).size.width >= 600;
