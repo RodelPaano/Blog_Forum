@@ -8,7 +8,7 @@ import 'package:blog_forum_app/presentation/pages/post_edit_page.dart'
 import 'package:blog_forum_app/presentation/pages/post_details_page.dart'
     show PostDetailsPage;
 import 'package:blog_forum_app/presentation/pages/profile_page.dart'
-    show ProfilePage;
+    show ProfileScreen;
 import 'package:blog_forum_app/presentation/pages/register_page.dart'
     show RegisterPage;
 import 'package:flutter/material.dart';
@@ -43,7 +43,7 @@ class AppRouter {
         path: '/post/:id/edit',
         builder: (_, s) => PostEditPage(postId: s.pathParameters['id']!),
       ),
-      GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     ],
     errorBuilder: (_, state) => Scaffold(
       appBar: AppBar(title: const Text('Not Found')),
