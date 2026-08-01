@@ -344,18 +344,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 20),
 
                           /// Full Name field
-                          TextFieldWidget(
+                          TextFormField(
                             controller: _nameController,
-                            labelText: 'Full Name',
-                            prefixIcon: Icons.person_outlined,
-                            textCapitalization: TextCapitalization.words,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            autofillHints: null,
-                            validator: Validators.name,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) =>
-                                FocusScope.of(context).unfocus(),
+                            decoration: const InputDecoration(
+                              labelText: 'Full Name',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
                           const SizedBox(height: 16),
 
